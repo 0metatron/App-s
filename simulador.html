@@ -78,8 +78,8 @@ input[type=range]{width:100%;accent-color:var(--vermelho);margin:12px 0 8px;heig
 .card{position:relative;text-align:left;background:var(--chassi);border:1px solid var(--risco);border-radius:18px;padding:0 0 12px;display:flex;flex-direction:column;overflow:hidden;transition:transform .15s,border-color .15s}
 .card:hover{border-color:#4a4f57}
 .card:active{transform:scale(.98)}
-.palco{position:relative;padding:8px 6px 0;background:radial-gradient(70% 60% at 50% 100%,rgba(225,29,42,.22),transparent 70%),linear-gradient(180deg,#1d2024,#17191c)}
-.palco svg{display:block;width:100%;height:auto}
+.palco{position:relative;padding:16px 14px 8px;background:radial-gradient(70% 60% at 50% 100%,rgba(225,29,42,.22),transparent 70%),linear-gradient(180deg,#1d2024,#17191c)}
+.palco svg{display:block;width:100%;max-width:150px;height:auto;margin:0 auto}
 .card .in{padding:4px 12px 0;display:flex;flex-direction:column;gap:2px}
 .card small{font-size:10.5px;color:var(--apagado);text-transform:uppercase;letter-spacing:.07em;font-weight:600}
 .card h3{font-size:20px;font-weight:800;line-height:1.05}
@@ -106,7 +106,7 @@ input[type=range]{width:100%;accent-color:var(--vermelho);margin:12px 0 8px;heig
 @keyframes sobe{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
 .sh-in{overflow-y:auto;padding:0 16px 16px;flex:1}
 .sh-palco{position:relative;margin:0 -16px;padding:18px 24px 0;background:radial-gradient(70% 70% at 50% 100%,rgba(225,29,42,.3),transparent 70%),linear-gradient(180deg,#1f2226,#17191c);border-radius:24px 24px 0 0}
-.sh-palco svg{display:block;width:100%;max-width:420px;margin:0 auto;height:auto}
+.sh-palco svg{display:block;width:100%;max-width:260px;margin:0 auto;height:auto;padding:6px 0 14px}
 .x{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.45);border:1px solid var(--risco);border-radius:12px;width:38px;height:38px;font-size:20px;line-height:1;color:var(--texto);z-index:2}
 .share{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.45);border:1px solid var(--risco);border-radius:12px;height:38px;padding:0 12px;font-size:12.5px;font-weight:600;color:var(--texto);z-index:2}
 .sh-h{padding:10px 0 4px}
@@ -194,7 +194,7 @@ input[type=range]{width:100%;accent-color:var(--vermelho);margin:12px 0 8px;heig
   <div class="grid" id="grid"></div>
 
   <div class="confia"><div><b>Sem juros</b><span>no consórcio</span></div><div><b>Até 48x</b><span>no financiamento</span></div><div><b>Moto usada</b><span>vale como entrada</span></div></div>
-  <p class="nota">Preços sugeridos de fábrica (referência maio/2026); alguns modelos com frete à parte. Cores das ilustrações são só ilustrativas. Parcelas são estimativas: o financiamento depende de análise de crédito, e o consórcio segue as regras da administradora, com contemplação por sorteio ou lance.</p>
+  <p class="nota">Preços sugeridos de fábrica (referência maio/2026); alguns modelos com frete à parte. Parcelas são estimativas: o financiamento depende de análise de crédito, e o consórcio segue as regras da administradora, com contemplação por sorteio ou lance.</p>
   <div class="rod"><span>Demonstração criada por <a href="index.html">Cesar</a>.</span><button class="lnk" id="adm-open">Modo loja</button></div>
 </div>
 
@@ -202,111 +202,16 @@ input[type=range]{width:100%;accent-color:var(--vermelho);margin:12px 0 8px;heig
 <div class="toast" id="toast" hidden></div>
 
 <script>
-/* Ilustrações laterais das motos, desenhadas em SVG (sem fotos de terceiros). bike(tipo, cor, id) devolve o SVG. */
-function bike(t,cor,uid){
-  cor=cor||'#e11d2a';uid=uid||('b'+Math.random().toString(36).slice(2,7));
-  const G=`<defs>
-   <linearGradient id="${uid}c" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${cor}" stop-opacity="1"/><stop offset=".55" stop-color="${cor}"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></linearGradient>
-   <linearGradient id="${uid}m" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4f6f8"/><stop offset=".5" stop-color="#9aa3ad"/><stop offset="1" stop-color="#5b636c"/></linearGradient>
-   <linearGradient id="${uid}k" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3f46"/><stop offset="1" stop-color="#121417"/></linearGradient>
-   <radialGradient id="${uid}s" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
-  </defs>`;
-  const C=`url(#${uid}c)`,M=`url(#${uid}m)`,K=`url(#${uid}k)`;
-  const roda=(x,y,r,tipo)=>{const raios=[];if(tipo==='raio'){for(let i=0;i<12;i++){const a=i*Math.PI/6;raios.push(`<line x1="${x}" y1="${y}" x2="${(x+Math.cos(a)*(r-7)).toFixed(1)}" y2="${(y+Math.sin(a)*(r-7)).toFixed(1)}" stroke="#c9ced4" stroke-width=".8"/>`)}}
-    else{for(let i=0;i<5;i++){const a=i*2*Math.PI/5-Math.PI/2,b=a+.35;raios.push(`<path d="M${x} ${y} L${(x+Math.cos(a)*(r-7)).toFixed(1)} ${(y+Math.sin(a)*(r-7)).toFixed(1)} L${(x+Math.cos(b)*(r-7)).toFixed(1)} ${(y+Math.sin(b)*(r-7)).toFixed(1)} Z" fill="${M}" opacity=".9"/>`)}}
-    return`<circle cx="${x}" cy="${y}" r="${r}" fill="#0c0d0f"/>${tipo==='cravo'?`<circle cx="${x}" cy="${y}" r="${r-1.5}" fill="none" stroke="#2b2e33" stroke-width="3" stroke-dasharray="3 2.4"/>`:''}<circle cx="${x}" cy="${y}" r="${r-6}" fill="none" stroke="${M}" stroke-width="2"/><circle cx="${x}" cy="${y}" r="${r-8}" fill="#1b1e22"/>${raios.join('')}<circle cx="${x}" cy="${y}" r="${tipo==='raio'?4:5}" fill="${M}"/><circle cx="${x}" cy="${y}" r="1.6" fill="#2b2e33"/>`};
-  const sombra=(x1,x2)=>`<ellipse cx="${(x1+x2)/2}" cy="139" rx="${(x2-x1)/2+30}" ry="5" fill="url(#${uid}s)"/>`;
-  let s='';
-  if(t==='cidade'||t==='street'){ /* street utilitária */
-    s=sombra(58,184)+`
-    <path d="M58 112 L112 101 L114 107 L60 117 Z" fill="${K}"/>
-    <path d="M118 112 Q96 110 70 104 L40 99 L41 94 L72 98 Q98 103 120 106 Z" fill="${M}"/>
-    ${roda(58,112,25,'raio')}${roda(186,112,25,'raio')}
-    <path d="M168 62 L188 112" stroke="${M}" stroke-width="6" stroke-linecap="round"/>
-    <path d="M168 62 L178 86" stroke="#1b1e22" stroke-width="7" stroke-linecap="round"/>
-    <path d="M160 88 Q186 78 206 98 L202 102 Q184 88 164 94 Z" fill="${C}"/>
-    <rect x="102" y="84" width="40" height="28" rx="6" fill="${K}"/><path d="M106 90h32M106 96h32M106 102h30" stroke="#4a5058" stroke-width="1.5"/>
-    <path d="M100 66 Q118 50 150 54 Q160 56 164 64 L160 76 Q130 80 104 80 Z" fill="${C}"/>
-    <path d="M110 62 Q126 54 146 57" stroke="#fff" stroke-opacity=".45" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M62 74 Q82 64 108 68 L106 79 Q84 80 60 84 Z" fill="#141518"/>
-    <path d="M40 80 L64 72 L62 84 L42 90 Z" fill="${C}"/><rect x="34" y="84" width="9" height="5" rx="2" fill="#ff3b3b"/>
-    <path d="M80 82 L104 80 L102 98 L86 98 Z" fill="${C}" opacity=".85"/>
-    <path d="M158 50 L168 46 L180 48" stroke="#1b1e22" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <circle cx="176" cy="66" r="9" fill="${M}"/><circle cx="178" cy="66" r="6" fill="#fff8d6"/>`}
-  else if(t==='cub'){ /* cub com escudo */
-    s=sombra(60,182)+`
-    <path d="M60 112 L110 103 L111 108 L62 117 Z" fill="${K}"/>
-    <path d="M114 112 Q92 110 70 106 L44 102 L45 97 L72 101 Q94 105 116 107 Z" fill="${M}"/>
-    ${roda(60,112,24,'raio')}${roda(182,112,24,'raio')}
-    <path d="M166 58 L184 112" stroke="${M}" stroke-width="6" stroke-linecap="round"/>
-    <path d="M158 88 Q182 80 200 98 L196 102 Q180 90 162 94 Z" fill="${C}"/>
-    <rect x="100" y="90" width="34" height="22" rx="6" fill="${K}"/>
-    <path d="M70 70 L126 72 Q140 74 146 90 L136 92 Q128 80 112 82 L76 84 Z" fill="${C}"/>
-    <path d="M146 92 Q150 66 162 52 L172 56 Q160 72 158 96 Z" fill="${C}"/>
-    <path d="M64 66 Q84 58 112 62 L112 72 Q86 72 62 76 Z" fill="#141518"/>
-    <path d="M44 74 L66 68 L66 78 L46 84 Z" fill="${C}"/><rect x="38" y="78" width="8" height="5" rx="2" fill="#ff3b3b"/>
-    <path d="M160 46 L170 42 L182 44" stroke="#1b1e22" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <path d="M166 50 Q178 46 184 54 L176 62 Q168 60 164 56 Z" fill="${C}"/><circle cx="180" cy="54" r="4" fill="#fff8d6"/>`}
-  else if(t==='scooter'||t==='ciclo'){ const r=t==='ciclo'?20:21;
-    s=sombra(64,180)+`
-    ${roda(64,116,r,'liga')}${roda(180,116,r,'liga')}
-    <path d="M168 62 L180 116" stroke="${M}" stroke-width="5" stroke-linecap="round"/>
-    <path d="M160 96 Q180 86 196 102 L192 106 Q180 96 164 100 Z" fill="${C}"/>
-    <path d="M40 92 Q46 70 76 66 L126 66 Q138 66 140 76 L144 100 L92 102 Q74 104 62 104 Q46 104 40 92 Z" fill="${C}"/>
-    <path d="M58 76 Q76 70 110 71" stroke="#fff" stroke-opacity=".4" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M92 104 L150 104 L156 96 L142 94 Z" fill="${K}"/>
-    <path d="M140 100 Q150 66 168 48 L178 54 Q164 72 158 104 Z" fill="${C}"/>
-    <path d="M54 62 Q80 52 120 56 L122 66 Q86 66 52 70 Z" fill="#141518"/>
-    <path d="M36 88 L44 86 L44 92 L36 94 Z" fill="#ff3b3b"/>
-    <path d="M164 40 L174 36 L186 40" stroke="#1b1e22" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <path d="M168 44 Q182 42 186 52 L176 58 Q168 54 166 50 Z" fill="${C}"/><circle cx="182" cy="50" r="4" fill="#fff8d6"/>`}
-  else if(t==='trail'){
-    s=sombra(54,190)+`
-    <path d="M54 108 L112 94 L114 100 L56 114 Z" fill="${K}"/>
-    <path d="M120 104 Q100 100 76 90 L50 82 L52 77 L78 85 Q102 94 122 98 Z" fill="${M}"/>
-    ${roda(54,110,27,'cravo')}${roda(190,110,27,'cravo')}
-    <path d="M166 48 L190 110" stroke="${M}" stroke-width="6.5" stroke-linecap="round"/>
-    <path d="M166 48 L180 82" stroke="#d4a017" stroke-width="7" stroke-linecap="round"/>
-    <path d="M176 64 Q200 60 214 76 L206 78 Q194 70 180 72 Z" fill="${C}"/>
-    <rect x="102" y="80" width="38" height="26" rx="6" fill="${K}"/><path d="M106 86h30M106 92h30M106 98h28" stroke="#4a5058" stroke-width="1.5"/>
-    <path d="M98 60 Q118 44 150 48 Q164 50 170 60 L162 74 Q130 74 102 76 Z" fill="${C}"/>
-    <path d="M108 56 Q124 48 148 51" stroke="#fff" stroke-opacity=".45" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M56 64 Q82 54 110 60 L108 70 Q84 70 56 74 Z" fill="#141518"/>
-    <path d="M26 62 L60 56 L58 66 L30 70 Z" fill="${C}"/><rect x="22" y="64" width="8" height="5" rx="2" fill="#ff3b3b"/>
-    <path d="M78 74 L104 74 L100 92 L84 92 Z" fill="${C}" opacity=".85"/>
-    <path d="M156 40 L168 36 L182 40" stroke="#1b1e22" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <path d="M166 44 L186 46 L182 62 L168 60 Z" fill="${C}"/><circle cx="180" cy="54" r="5" fill="#fff8d6"/>`}
-  else if(t==='custom'){
-    s=sombra(50,194)+`
-    <path d="M50 114 L106 106 L108 112 L52 120 Z" fill="${K}"/>
-    <path d="M124 116 L54 110 L30 108 L30 103 L56 105 L126 110 Z" fill="${M}"/>
-    ${roda(50,114,27,'raio')}${roda(196,116,23,'raio')}
-    <path d="M160 58 L196 116" stroke="${M}" stroke-width="6" stroke-linecap="round"/>
-    <path d="M176 94 Q198 88 214 106 L208 110 Q196 98 180 100 Z" fill="${C}"/>
-    <path d="M98 88 L142 88 L148 112 L104 112 Z" fill="${K}"/><path d="M110 92 L118 110 M126 92 L134 110" stroke="${M}" stroke-width="5" stroke-linecap="round"/>
-    <path d="M106 74 Q122 58 150 62 Q160 64 160 72 L154 82 Q130 86 108 86 Z" fill="${C}"/>
-    <path d="M114 70 Q128 62 148 65" stroke="#fff" stroke-opacity=".45" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M62 84 Q82 74 110 78 L108 88 Q86 90 60 94 Z" fill="#141518"/>
-    <path d="M28 94 Q44 82 66 84 L64 92 Q46 94 30 100 Z" fill="${C}"/>
-    <path d="M150 50 L160 44 L176 42" stroke="${M}" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <circle cx="170" cy="64" r="9" fill="${M}"/><circle cx="172" cy="64" r="6" fill="#fff8d6"/>`}
-  else { /* naked / esportiva */
-    s=sombra(56,188)+`
-    <path d="M56 110 L114 98 L116 104 L58 116 Z" fill="${K}"/>
-    <path d="M122 110 Q100 104 82 92 L72 84 L76 80 L86 88 Q104 100 124 104 Z" fill="${M}"/><rect x="66" y="76" width="16" height="9" rx="3" fill="${M}"/>
-    ${roda(56,110,26,'liga')}${roda(188,110,26,'liga')}
-    <path d="M166 56 L188 110" stroke="#d4a017" stroke-width="7" stroke-linecap="round"/>
-    <path d="M160 86 Q184 76 206 94 L202 98 Q184 86 164 92 Z" fill="${C}"/>
-    <path d="M100 80 L144 80 L150 106 L108 108 Z" fill="${K}"/>
-    <path d="M110 108 L150 108 L156 98 L114 98 Z" fill="${C}"/>
-    <path d="M96 62 Q116 42 152 48 Q166 52 170 64 L164 80 Q134 84 100 82 Z" fill="${C}"/>
-    <path d="M108 56 Q126 46 152 52" stroke="#fff" stroke-opacity=".45" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <path d="M60 64 Q80 56 104 62 L102 72 Q82 72 58 76 Z" fill="#141518"/>
-    <path d="M36 56 L64 58 L62 68 L40 64 Z" fill="${C}"/><rect x="32" y="56" width="8" height="5" rx="2" fill="#ff3b3b"/>
-    <path d="M154 44 L166 40 L180 44" stroke="#1b1e22" stroke-width="4" fill="none" stroke-linecap="round"/>
-    <path d="M162 50 L182 52 L178 66 L166 64 Z" fill="${K}"/><path d="M168 56 L180 57" stroke="#bfe9ff" stroke-width="3" stroke-linecap="round"/>`}
-  return`<svg viewBox="0 0 240 146" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${G}${s}</svg>`}
-
+/* desenhos simples por tipo */
+function moto(t){const W='<circle cx="26" cy="50" r="13"/><circle cx="94" cy="50" r="13"/><circle cx="26" cy="50" r="3"/><circle cx="94" cy="50" r="3"/>';
+  const B={cidade:'<path d="M26 50l18-18h22l10 8M44 32l-4-6h-8M66 32l10-14h8M76 18l6-2M50 50h18l8-10"/><path d="M46 31h20" stroke-width="5"/>',
+   scooter:'<path d="M26 50h40l10-14-4-20h8M72 16h-6M34 42c6-8 16-10 30-8M30 36h24"/><path d="M36 34h22" stroke-width="6"/>',
+   trail:'<path d="M26 50l16-20h26l12 6M42 30l-6-10h-6M68 30l12-14h8M80 16l4-2M50 50h16l8-14"/><path d="M44 29h22" stroke-width="5"/><path d="M84 30l10 20"/>',
+   custom:'<path d="M26 50l12-14h20l20 2M38 36c-4-4-6-6-10-6M78 38l8-18h10M86 20l-4-4M50 50h22l6-12"/><path d="M40 35h18" stroke-width="6"/>',
+   grande:'<path d="M26 50l20-20h22l12 10M46 30l-8-6h-8M68 30l8-12h10M86 18l4-2M48 50h22l10-10"/><path d="M48 29h20" stroke-width="7"/>',
+   ciclo:'<path d="M26 50h36l14-16-4-16h8M30 40c8-6 18-8 30-6M30 36h22"/><path d="M34 34h18" stroke-width="5"/>'}[t]||'';
+  return`<svg viewBox="0 0 120 66" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:#e8eaee">${W}${B}</svg>`}
+function bike(t){return moto(t==='cub'?'cidade':t)}
 
 (function(){
 "use strict";
