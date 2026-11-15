@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B1220">
+<title>Placar de Vendas</title>
+<meta name="description" content="Ranking da equipe, metas e comissão calculada na hora. Sem planilha.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F3F4F7;--card:#fff;--ink:#0B1220;--ink2:#344054;--muted:#7A8499;--line:#E7E9EE;
+  --brand:#1F4FE0;--brand2:#3B6BFF;--brand-soft:#EAF0FF;
+  --green:#12A150;--green-soft:#E6F6EC;--red:#E5484D;--red-soft:#FDECEC;
+  --amber:#F59E0B;--amber-soft:#FFF4DE;--gray-soft:#F0F1F4;
+  --gold:#F5B70B;--silver:#A3ADBD;--bronze:#D08A4E;
+  --r:18px;--shadow:0 1px 2px rgba(16,24,40,.04),0 6px 18px rgba(16,24,40,.06);
+  --sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Plus Jakarta Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:15px;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+.num{font-variant-numeric:tabular-nums}
+svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.app{max-width:560px;margin:0 auto;min-height:100vh;padding-bottom:calc(150px + var(--sab))}
+.demo-strip{background:#FFF4DE;color:#7A4B00;font-size:12.5px;font-weight:600;text-align:center;padding:calc(7px + var(--sat)) 14px 7px;line-height:1.4}
+.demo-strip a{text-decoration:underline;font-weight:700}
+
+.topbar{position:sticky;top:0;z-index:20;background:rgba(11,18,32,.97);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:11px}
+.logo{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,#F5B70B,#FFD66B);color:#3B2A00;display:grid;place-items:center;flex:none}
+.logo svg{width:20px;height:20px}
+.topbar h1{font-size:15px;margin:0;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar small{display:block;color:#98A2B6;font-size:12px;font-weight:500}
+.tb-txt{min-width:0;flex:1}
+.tbtn{height:36px;border-radius:11px;border:0;background:rgba(255,255,255,.09);color:#fff;display:flex;align-items:center;gap:6px;padding:0 11px;font-size:12.5px;font-weight:700;flex:none}
+
+.hero{background:var(--ink);color:#fff;padding:6px 18px 70px}
+.hero .lbl{color:#98A2B6;font-size:13px;font-weight:600}
+.hero .big{font-size:34px;font-weight:800;letter-spacing:-.03em;margin-top:2px}
+.hero .sub{color:#C9D3E6;font-size:13.5px;margin-top:2px}
+.meta-bar{height:10px;background:rgba(255,255,255,.1);border-radius:99px;margin-top:14px;overflow:hidden;position:relative}
+.meta-bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#3B6BFF,#8FB0FF)}
+.meta-bar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:#FFD66B;border-radius:2px}
+.meta-leg{display:flex;justify-content:space-between;font-size:12px;color:#98A2B6;margin-top:7px;font-weight:600}
+.meta-leg em{font-style:normal;color:#FFD66B}
+
+.wrap{padding:0 16px}
+.page-h{padding:18px 18px 4px}
+.page-h h2{margin:0;font-size:24px;letter-spacing:-.02em;font-weight:800}
+.page-h p{margin:4px 0 0;color:var(--muted);font-size:13px}
+
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:-52px}
+.kpi{background:var(--card);border-radius:16px;padding:12px;box-shadow:var(--shadow)}
+.kpi span{font-size:11.5px;color:var(--muted);font-weight:600;display:block}
+.kpi b{display:block;font-size:17px;margin-top:4px;letter-spacing:-.02em;font-weight:800;white-space:nowrap}
+.kpi em{font-style:normal;font-size:11px;color:var(--muted);font-weight:600}
+.kpi em.up{color:var(--green)}.kpi em.down{color:var(--red)}
+
+.section{margin-top:22px}
+.section-h{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;gap:10px}
+.section-h h3{font-size:16px;margin:0;font-weight:800;letter-spacing:-.01em}
+.link{color:var(--brand);font-weight:700;font-size:13px;background:none;border:0;padding:4px 0}
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:#E9EBF0;border-radius:13px;padding:4px}
+.seg button{border:0;background:none;padding:8px 6px;border-radius:10px;font-weight:700;font-size:13px;color:var(--muted);white-space:nowrap}
+.seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(16,24,40,.1)}
+
+/* pódio */
+.podium{display:grid;grid-template-columns:1fr 1.12fr 1fr;gap:8px;align-items:end;margin-top:14px}
+.pod{background:var(--card);border-radius:18px;box-shadow:var(--shadow);padding:14px 8px 12px;text-align:center;cursor:pointer;position:relative}
+.pod.p1{padding-top:18px;background:linear-gradient(180deg,#FFF8E1,#fff 60%)}
+.pod .medal{position:absolute;top:-11px;left:50%;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.pod.p1 .medal{background:var(--gold)}.pod.p2 .medal{background:var(--silver)}.pod.p3 .medal{background:var(--bronze)}
+.pod .av{margin:0 auto}
+.pod.p1 .av{width:54px;height:54px;font-size:17px;box-shadow:0 0 0 3px #FFE08A}
+.pod .n{font-weight:800;font-size:13.5px;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pod .v{font-weight:800;font-size:15px;margin-top:2px;letter-spacing:-.01em}
+.pod .s{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:1px}
+
+.av{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-weight:800;font-size:14px;flex:none;color:#fff}
+
+/* ranking */
+.rk{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.rk:last-child{border-bottom:0}
+.rk .pos{width:22px;text-align:center;font-weight:800;color:var(--muted);font-size:14px;flex:none}
+.rk .mid{flex:1;min-width:0}
+.rk .t{font-weight:700;display:flex;justify-content:space-between;gap:8px}
+.rk .t span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rk .t b{font-weight:800;white-space:nowrap}
+.rk .bar{height:7px;background:var(--gray-soft);border-radius:9px;margin-top:7px;overflow:hidden}
+.rk .bar i{display:block;height:100%;border-radius:9px}
+.rk .s{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:5px;font-weight:600}
+.c-low{background:linear-gradient(90deg,#F59E0B,#FBBF24)}
+.c-mid{background:linear-gradient(90deg,var(--brand),var(--brand2))}
+.c-ok{background:linear-gradient(90deg,#0E9F4D,#34D399)}
+.badge{font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:6px;background:var(--green-soft);color:var(--green);margin-left:6px;vertical-align:1px}
+
+/* gráfico */
+.chart{padding:14px 14px 10px}
+.chart svg{display:block;width:100%;height:auto}
+.chart-leg{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);font-weight:600;margin-top:6px}
+
+/* feed */
+.feed{display:flex;align-items:center;gap:11px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.feed:last-child{border-bottom:0}
+.feed .av{width:34px;height:34px;border-radius:11px;font-size:12px}
+.feed .mid{flex:1;min-width:0;font-size:13.5px}
+.feed .mid b{font-weight:700}
+.feed .mid small{display:block;color:var(--muted);font-size:12px;margin-top:1px}
+.feed .v{font-weight:800;font-size:14px;color:var(--green);white-space:nowrap}
+.feed .del{border:0;background:var(--gray-soft);width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--muted);flex:none}
+.feed .del svg{width:16px;height:16px}
+
+/* vendedor */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 0 2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px 6px 6px;font-size:13px;font-weight:700;white-space:nowrap;color:var(--ink2);display:flex;align-items:center;gap:7px}
+.chip .av{width:24px;height:24px;border-radius:8px;font-size:10px}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.me{background:var(--ink);color:#fff;border-radius:var(--r);padding:18px;margin-top:12px;position:relative;overflow:hidden}
+.me:after{content:"";position:absolute;right:-50px;top:-50px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.05)}
+.me .top{display:flex;align-items:center;gap:12px}
+.me .av{width:50px;height:50px;font-size:16px}
+.me h3{margin:0;font-size:19px;letter-spacing:-.02em}
+.me .top small{color:#98A2B6;font-weight:600;font-size:12.5px}
+.me .rank{margin-left:auto;text-align:right}
+.me .rank b{display:block;font-size:26px;font-weight:800;line-height:1}
+.me .rank small{font-size:11px}
+.me .earn{margin-top:16px;display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.me .earn small{color:#98A2B6;font-weight:600;font-size:12.5px}
+.me .earn b{display:block;font-size:30px;font-weight:800;letter-spacing:-.03em;margin-top:2px}
+.me .split{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1)}
+.me .split small{color:#98A2B6;font-size:11.5px;font-weight:600;display:block}
+.me .split b{font-size:15px;font-weight:800;display:block;margin-top:2px}
+.goal{padding:16px}
+.goal .gt{display:flex;justify-content:space-between;align-items:baseline}
+.goal .gt b{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.goal .gt span{font-size:13px;color:var(--muted);font-weight:600}
+.goal .track{height:12px;background:var(--gray-soft);border-radius:99px;margin-top:12px;position:relative;overflow:visible}
+.goal .track i{display:block;height:100%;border-radius:99px;max-width:100%}
+.goal .tick{position:absolute;top:-4px;bottom:-4px;width:2px;background:#C9D1E0;border-radius:2px}
+.goal .tick span{position:absolute;top:20px;left:50%;transform:translateX(-50%);font-size:10.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+.goal .tick.hit{background:var(--green)}
+.goal .tick.hit span{color:var(--green)}
+.fx-leg{display:flex;gap:6px;flex-wrap:wrap;margin-top:28px}
+.fx-leg span{font-size:12px;font-weight:700;padding:5px 9px;border-radius:8px;background:var(--gray-soft);color:var(--muted)}
+.fx-leg span.hit{background:var(--green-soft);color:var(--green)}
+.nextbox{display:flex;gap:12px;align-items:center;padding:14px;border-top:1px solid var(--line)}
+.nextbox .ic{width:40px;height:40px;border-radius:12px;background:var(--amber-soft);color:#B45309;display:grid;place-items:center;flex:none}
+.nextbox b{display:block;font-size:14px}
+.nextbox span{font-size:12.5px;color:var(--muted)}
+.tip{display:flex;gap:12px;align-items:center;padding:14px;margin-top:10px}
+.tip .ic{width:40px;height:40px;border-radius:12px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;flex:none}
+.tip b{display:block;font-size:14px}
+.tip span{font-size:12.5px;color:var(--muted)}
+
+/* relatório */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:800;text-align:right;padding:11px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl td{padding:11px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.tbl tr:last-child td{border-bottom:0}
+.tbl td b{font-weight:800}
+.tbl td:first-child{white-space:normal}
+.tbl td,.tbl th{padding-left:8px;padding-right:8px}
+.tbl small.sm{display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-top:2px}
+.tbl tfoot td{background:#FAFBFC;font-weight:800;border-top:1px solid var(--line)}
+.tbl-wrap{overflow-x:auto}
+.monthnav{display:flex;align-items:center;gap:6px;margin-top:12px}
+.nb{width:36px;height:36px;border-radius:11px;border:1px solid var(--line);background:#fff;display:grid;place-items:center;flex:none}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+
+/* ajustes */
+.cfg-sec{margin-top:20px}
+.cfg-sec h4{margin:0 2px 8px;font-size:12.5px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.cfg-card{padding:14px;display:grid;gap:12px}
+.faixa{display:grid;grid-template-columns:1fr 1fr 38px;gap:8px;align-items:end}
+.vrow{display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line)}
+.vrow:last-child{border-bottom:0}
+.vrow .av{width:34px;height:34px;border-radius:11px;font-size:12px}
+.vrow input{flex:1;min-width:0;border:1px solid transparent;background:none;padding:8px;border-radius:10px;font-weight:700;font-size:15px}
+.vrow input:focus{border-color:var(--line);background:#fff;outline:none}
+.vrow .mt{width:110px;flex:none;font-weight:600;font-size:14px;text-align:right}
+.icon-x{width:34px;height:34px;border-radius:10px;border:0;background:var(--gray-soft);color:var(--muted);display:grid;place-items:center;flex:none}
+.icon-x svg{width:16px;height:16px}
+
+/* form */
+.f{display:grid;gap:13px}
+.fld label{display:block;font-size:12.5px;font-weight:700;color:var(--ink2);margin:0 0 6px 2px}
+.fld input,.fld select,.fld textarea{width:100%;min-width:0;border:1px solid var(--line);background:#fff;border-radius:13px;padding:12px 13px;font-size:16px;outline:none;-webkit-appearance:none;appearance:none}
+.fld select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A8499' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.fld textarea{min-height:120px;resize:vertical;font-size:14px}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.fld .hint{font-size:12px;color:var(--muted);margin:6px 2px 0;line-height:1.45}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row2>*{min-width:0}
+.big-input{font-size:30px!important;font-weight:800;letter-spacing:-.02em;padding:14px 16px!important;text-align:center}
+.pick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pick button{border:1px solid var(--line);background:#fff;border-radius:14px;padding:10px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700;font-size:12.5px}
+.pick button .av{width:34px;height:34px;border-radius:11px;font-size:12px}
+.pick button.on{border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft);color:var(--brand)}
+.preview-sale{background:var(--green-soft);color:#0B7A3B;border-radius:12px;padding:11px 13px;font-size:13.5px;font-weight:600;line-height:1.45}
+.btn{border:0;border-radius:14px;padding:14px 16px;font-weight:800;background:var(--ink);color:#fff;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.brand{background:var(--brand)}
+.btn.green{background:#128C4A}
+.btn.danger{background:var(--red-soft);color:var(--red)}
+.btn.sm{padding:10px 14px;font-size:13.5px}
+.btn:disabled{opacity:.55}
+
+/* nav */
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:30;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:6px 6px calc(6px + var(--sab))}
+.nav-in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.nav button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:700;color:#98A2B3;padding:6px 0}
+.nav button svg{width:22px;height:22px}
+.nav button.on{color:var(--brand)}
+.fab{position:fixed;right:max(16px,calc(50% - 264px));bottom:calc(76px + var(--sab));z-index:31;height:54px;padding:0 20px 0 16px;border-radius:18px;border:0;background:var(--brand);color:#fff;font-weight:800;display:flex;align-items:center;gap:8px;box-shadow:0 10px 26px rgba(31,79,224,.38);font-size:15px}
+
+/* sheet */
+.sheet-wrap{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet-bg{position:absolute;inset:0;background:rgba(11,18,32,.5);animation:fade .2s ease}
+.sheet{position:relative;width:100%;max-width:560px;max-height:93vh;overflow:auto;-webkit-overflow-scrolling:touch;background:var(--bg);border-radius:24px 24px 0 0;padding:6px 16px calc(22px + var(--sab));animation:up .28s cubic-bezier(.2,.8,.2,1)}
+.grab{width:40px;height:5px;border-radius:9px;background:#D0D5DD;margin:4px auto 12px}
+@keyframes up{from{transform:translateY(40px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fade{from{opacity:0}}
+.sh-h{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px}
+.sh-h h3{margin:0;font-size:20px;letter-spacing:-.02em;font-weight:800}
+.sh-h p{margin:3px 0 0;color:var(--muted);font-size:13px}
+.x{width:34px;height:34px;border-radius:11px;border:0;background:#E7E9EE;display:grid;place-items:center;flex:none}
+
+/* telão */
+.tv{position:fixed;inset:0;z-index:70;background:radial-gradient(1200px 600px at 50% -20%,#1E3A8A 0%,#0B1220 65%);color:#fff;overflow:auto;padding:calc(20px + var(--sat)) 22px calc(24px + var(--sab))}
+.tv-in{max-width:980px;margin:0 auto}
+.tv-h{display:flex;align-items:center;gap:14px}
+.tv-h h2{margin:0;font-size:clamp(22px,4vw,40px);letter-spacing:-.03em;font-weight:800}
+.tv-h small{display:block;color:#98A2B6;font-weight:600;font-size:clamp(12px,1.6vw,16px)}
+.tv-h button{margin-left:auto}
+.tv-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+.tv-kpis div{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:16px}
+.tv-kpis small{color:#98A2B6;font-weight:600;font-size:clamp(11px,1.4vw,15px)}
+.tv-kpis b{display:block;font-size:clamp(20px,3.6vw,38px);font-weight:800;letter-spacing:-.03em;margin-top:4px}
+.tv-list{margin-top:18px;display:grid;gap:10px}
+.tv-row{display:flex;align-items:center;gap:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:14px 18px}
+.tv-row.first{background:linear-gradient(90deg,rgba(245,183,11,.22),rgba(255,255,255,.04));border-color:rgba(245,183,11,.4)}
+.tv-row .pos{font-size:clamp(18px,3vw,32px);font-weight:800;width:44px;text-align:center;color:#98A2B6}
+.tv-row.first .pos{color:var(--gold)}
+.tv-row .av{width:clamp(38px,5vw,56px);height:clamp(38px,5vw,56px);font-size:clamp(13px,1.8vw,19px)}
+.tv-row .mid{flex:1;min-width:0}
+.tv-row .n{font-size:clamp(16px,2.4vw,26px);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tv-row .bar{height:10px;background:rgba(255,255,255,.1);border-radius:99px;margin-top:8px;overflow:hidden}
+.tv-row .bar i{display:block;height:100%;border-radius:99px}
+.tv-row .v{text-align:right;min-width:clamp(110px,18vw,200px)}
+.tv-row .v b{display:block;font-size:clamp(17px,2.8vw,30px);font-weight:800;letter-spacing:-.02em}
+.tv-row .v small{color:#98A2B6;font-weight:700;font-size:clamp(11px,1.4vw,15px)}
+.tv-foot{text-align:center;color:#7D8BA6;font-size:13px;margin-top:18px}
+
+/* toast */
+#toasts{position:fixed;left:0;right:0;top:calc(10px + var(--sat));z-index:90;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 12px}
+.toast{pointer-events:auto;max-width:520px;width:100%;background:#0B1220;color:#fff;border-radius:14px;padding:12px 14px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:0 12px 30px rgba(0,0,0,.25);animation:drop .25s ease}
+.toast.win{background:linear-gradient(90deg,#7A5600,#B07D00)}
+@keyframes drop{from{transform:translateY(-12px);opacity:0}}
+.empty{padding:28px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+.foot{text-align:center;color:var(--muted);font-size:12px;margin:26px 0 0;line-height:1.5}
+.pulse{animation:pulse .9s ease}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(18,161,80,.45)}100%{box-shadow:0 0 0 14px rgba(18,161,80,0)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="sheet" class="sheet-wrap" hidden>
+  <div class="sheet-bg" data-act="close-sheet"></div>
+  <div class="sheet" role="dialog" aria-modal="true"><div class="grab"></div><div id="sheet-body"></div></div>
+</div>
+<div id="tv" class="tv" hidden></div>
+<div id="toasts"></div>
+
+<script>
+/* ======================= armazenamento ======================= */
+const MEM = {};
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : (k in MEM ? MEM[k] : d); } catch (e) { return k in MEM ? MEM[k] : d; } },
+  set(k, v) { MEM[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
+  del(k) { delete MEM[k]; try { localStorage.removeItem(k); } catch (e) {} }
+};
+const KEY = 'placar_demo_v1';
+
+/* ======================= ícones ======================= */
+const P = {
+  trophy: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/>',
+  doc: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5M9 13h7M9 17h7"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  tv: '<rect x="2.5" y="4" width="19" height="13" rx="2.5"/><path d="M8 21h8M12 17v4"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  left: '<path d="m15 18-6-6 6-6"/>',
+  right: '<path d="m9 18 6-6-6-6"/>',
+  flag: '<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  zap: '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>',
+  copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+  wa: '<path d="M3.5 20.5 5 16.3A8.5 8.5 0 1 1 8 19.2z"/><path d="M9 9.2c.2 2.4 2.4 4.8 5.3 5.6l1.3-1.3-1.9-1-.9.7c-.8-.4-1.6-1.2-2-2l.7-.9-1-1.9z"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>',
+  upload: '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+  check: '<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'
+};
+const ic = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${P[n] || ''}</svg>`;
+
+/* ======================= utilidades ======================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4);
+const num = v => Number(v) || 0;
+const brl = n => num(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+const brl0 = n => num(n).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+const kbrl = n => { n = num(n); return Math.abs(n) >= 100000 ? 'R$ ' + (n / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + ' mil' : brl0(n); };
+const parseMoney = v => { const s = String(v ?? '').trim().replace(/[^\d.,-]/g, ''); if (!s) return 0; if (s.includes(',')) return Number(s.replace(/\./g, '').replace(',', '.')) || 0; if (/^\d{1,3}(\.\d{3})+$/.test(s)) return Number(s.replace(/\./g, '')) || 0; return Number(s) || 0; };
+const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => { d = new Date(d); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+const fromYmd = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const today = () => ymd(new Date());
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const monthRange = m => { const a = new Date(m.getFullYear(), m.getMonth(), 1), b = new Date(m.getFullYear(), m.getMonth() + 1, 0); return { from: ymd(a), to: ymd(b), days: b.getDate() }; };
+const weekStart = d => { const x = new Date(d); x.setHours(0, 0, 0, 0); return addDays(x, -((x.getDay() + 6) % 7)); };
+const monthLabel = m => cap(m.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }));
+const first = n => String(n || '').trim().split(/\s+/)[0];
+const initials = n => { const w = String(n || '?').trim().split(/\s+/); return ((w[0] || '?')[0] + (w.length > 1 ? w[w.length - 1][0] : '')).toUpperCase(); };
+const COLORS = ['#1F4FE0', '#0E9F6E', '#C2410C', '#7C3AED', '#DB2777', '#0891B2', '#B45309', '#4F46E5', '#059669', '#9333EA'];
+const avColor = v => COLORS[(DATA.vendedores.indexOf(v) + COLORS.length) % COLORS.length];
+const av = (v, cls = '') => `<div class="av ${cls}" style="background:${avColor(v)}">${esc(initials(v.nome))}</div>`;
+const relTime = ts => { const m = Math.round((Date.now() - ts) / 6e4); if (m < 1) return 'agora'; if (m < 60) return `há ${m} min`; const h = Math.round(m / 60); if (h < 24) return `há ${h}h`; const d = Math.round(h / 24); return `há ${d} dia${d > 1 ? 's' : ''}`; };
+
+/* ======================= dados ======================= */
+let DATA = null;
+function save() { LS.set(KEY, DATA); }
+function load() { DATA = LS.get(KEY, null); if (!DATA || !DATA.cfg) { DATA = seed(); save(); } }
+const cfg = () => DATA.cfg;
+const vend = id => DATA.vendedores.find(v => v.id === id);
+const isQtd = () => cfg().metaTipo === 'qtd';
+const fmtBase = n => isQtd() ? `${Math.round(n)} venda${Math.round(n) !== 1 ? 's' : ''}` : brl0(n);
+
+function stats(vid, from, to) {
+  let qtd = 0, fat = 0;
+  for (const s of DATA.vendas) if ((!vid || s.vid === vid) && s.data >= from && s.data <= to) { qtd++; fat += num(s.valor); }
+  return { qtd, fat, ticket: qtd ? fat / qtd : 0 };
+}
+function comissaoDe(qtd, fat) { return cfg().comTipo === 'pct' ? fat * num(cfg().comValor) / 100 : qtd * num(cfg().comValor); }
+function calcMes(v, m = new Date()) {
+  const { from, to, days } = monthRange(m);
+  const s = stats(v.id, from, to);
+  const meta = num(v.meta) || num(cfg().meta);
+  const base = isQtd() ? s.qtd : s.fat;
+  const pct = meta ? base / meta * 100 : 0;
+  const com = comissaoDe(s.qtd, s.fat);
+  const faixas = cfg().faixas.slice().sort((a, b) => a.alvo - b.alvo);
+  const atual = faixas.filter(f => pct >= f.alvo).pop() || null;
+  const prox = faixas.find(f => pct < f.alvo) || null;
+  const faltaProx = prox ? Math.max(0, prox.alvo / 100 * meta - base) : 0;
+  const bonus = atual ? num(atual.premio) : 0;
+  const isCur = ymd(m).slice(0, 7) === today().slice(0, 7);
+  const elapsed = isCur ? new Date().getDate() : days;
+  const proj = elapsed ? base / elapsed * days : base;
+  return { ...s, meta, base, pct, com, bonus, atual, prox, faltaProx, faixas, proj, total: com + bonus };
+}
+function ranking(from, to, m = new Date()) {
+  return DATA.vendedores.map(v => {
+    const p = stats(v.id, from, to), mc = calcMes(v, m);
+    return { v, p, mc, key: isQtd() ? p.qtd : p.fat };
+  }).sort((a, b) => b.key - a.key || b.mc.base - a.mc.base);
+}
+function periodRange() {
+  const t = new Date();
+  if (ui.periodo === 'hoje') return { from: today(), to: today(), label: 'hoje' };
+  if (ui.periodo === 'semana') { const ws = weekStart(t); return { from: ymd(ws), to: ymd(addDays(ws, 6)), label: 'nesta semana' }; }
+  const r = monthRange(t); return { from: r.from, to: r.to, label: 'no mês' };
+}
+
+/* ======================= estado ======================= */
+let view = 'placar';
+const ui = { periodo: 'mes', vend: null, relMes: new Date(), lastVend: null };
+
+/* ======================= telas ======================= */
+function barCls(p) { return p >= 100 ? 'c-ok' : p >= 70 ? 'c-mid' : 'c-low'; }
+
+function vPlacar() {
+  const t = new Date(), mr = monthRange(t), per = periodRange();
+  const team = stats(null, mr.from, mr.to);
+  const metaTeam = DATA.vendedores.reduce((a, v) => a + (num(v.meta) || num(cfg().meta)), 0);
+  const baseTeam = isQtd() ? team.qtd : team.fat;
+  const pctTeam = metaTeam ? baseTeam / metaTeam * 100 : 0;
+  const projTeam = baseTeam / t.getDate() * mr.days;
+  const ideal = t.getDate() / mr.days * 100;
+  const hoje = stats(null, today(), today());
+  const ontem = stats(null, ymd(addDays(t, -1)), ymd(addDays(t, -1)));
+  const rk = ranking(per.from, per.to);
+  const top = rk.slice(0, 3);
+  const delta = (isQtd() ? hoje.qtd - ontem.qtd : hoje.fat - ontem.fat);
+  const ritmo = pctTeam - ideal;
+
+  return `
+  <div class="hero">
+    <div class="lbl">Vendido em ${esc(monthLabel(t).split(' ')[0].toLowerCase())} pela equipe</div>
+    <div class="big num">${isQtd() ? team.qtd + ' vendas' : brl0(team.fat)}</div>
+    <div class="sub">${Math.round(pctTeam)}% da meta de ${fmtBase(metaTeam)} · ${ritmo >= 0 ? 'acima' : 'abaixo'} do ritmo ideal</div>
+    <div class="meta-bar"><i style="width:${Math.min(100, pctTeam)}%"></i><b style="left:${Math.min(99.5, ideal)}%"></b></div>
+    <div class="meta-leg"><span>Hoje é dia ${t.getDate()} de ${mr.days}</span><em>│ ritmo ideal ${Math.round(ideal)}%</em></div>
+  </div>
+  <div class="wrap">
+    <div class="kpis">
+      <div class="kpi"><span>Vendas hoje</span><b class="num">${isQtd() ? hoje.qtd : kbrl(hoje.fat)}</b><em class="${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '▲' : '▼'} ${isQtd() ? Math.abs(delta) : kbrl(Math.abs(delta))} vs ontem</em></div>
+      <div class="kpi"><span>Projeção do mês</span><b class="num">${isQtd() ? Math.round(projTeam) : kbrl(projTeam)}</b><em class="${projTeam >= metaTeam ? 'up' : 'down'}">${projTeam >= metaTeam ? 'bate a meta' : 'falta ' + (isQtd() ? Math.ceil(metaTeam - projTeam) : kbrl(metaTeam - projTeam))}</em></div>
+      <div class="kpi"><span>Ticket médio</span><b class="num">${kbrl(team.ticket)}</b><em>${team.qtd} vendas no mês</em></div>
+    </div>
+
+    <div class="section">
+      <div class="section-h"><h3>Ranking</h3><button class="link" data-act="tv">${'Modo telão'}</button></div>
+      <div class="seg">${[['hoje', 'Hoje'], ['semana', 'Semana'], ['mes', 'Mês']].map(([k, l]) => `<button class="${ui.periodo === k ? 'on' : ''}" data-act="periodo" data-v="${k}">${l}</button>`).join('')}</div>
+      ${top.length >= 3 && top[0].key > 0 ? `<div class="podium">${[1, 0, 2].map(i => { const r = top[i]; return `
+        <div class="pod p${i + 1}" data-act="ver-vend" data-id="${r.v.id}"><div class="medal">${i + 1}</div>${av(r.v)}
+        <div class="n">${esc(first(r.v.nome))}</div><div class="v num">${isQtd() ? r.p.qtd : kbrl(r.p.fat)}</div><div class="s">${isQtd() ? 'vendas' : r.p.qtd + ' venda' + (r.p.qtd !== 1 ? 's' : '')}</div></div>`; }).join('')}</div>` : ''}
+      <div class="card" style="margin-top:12px">${rk.map((r, i) => `
+        <div class="rk" data-act="ver-vend" data-id="${r.v.id}">
+          <div class="pos">${i + 1}º</div>${av(r.v)}
+          <div class="mid">
+            <div class="t"><span>${esc(r.v.nome)}${r.mc.pct >= 100 ? '<span class="badge">META ✓</span>' : ''}</span><b class="num">${isQtd() ? r.p.qtd + ' vend.' : brl0(r.p.fat)}</b></div>
+            <div class="bar"><i class="${barCls(r.mc.pct)}" style="width:${Math.min(100, r.mc.pct)}%"></i></div>
+            <div class="s"><span>${Math.round(r.mc.pct)}% da meta</span><span>${ui.periodo === 'mes' ? 'ganha ' + brl0(r.mc.total) : r.p.qtd + ' venda' + (r.p.qtd !== 1 ? 's' : '') + ' ' + per.label}</span></div>
+          </div>
+        </div>`).join('') || '<div class="empty"><b>Sem vendedores</b>Cadastre a equipe em Ajustes.</div>'}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-h"><h3>Vendas por dia</h3><span style="font-size:12.5px;color:var(--muted);font-weight:700">${esc(monthLabel(t))}</span></div>
+      <div class="card chart">${dailyChart(null, t)}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-h"><h3>Últimas vendas</h3></div>
+      <div class="card">${feed(null, 6)}</div>
+    </div>
+  </div>`;
+}
+
+function dailyChart(vid, m) {
+  const { from, days } = monthRange(m), tY = today();
+  const vals = [...Array(days)].map((_, i) => { const d = ymd(addDays(fromYmd(from), i)); const s = stats(vid, d, d); return { d, v: isQtd() ? s.qtd : s.fat, fut: d > tY, hoje: d === tY }; });
+  const max = Math.max(1, ...vals.map(x => x.v));
+  const W = 330, H = 120, gap = 2, bw = (W - gap * (days - 1)) / days;
+  const best = vals.reduce((a, b) => b.v > a.v ? b : a, vals[0]);
+  const bars = vals.map((x, i) => { const h = x.fut ? 3 : Math.max(2, x.v / max * (H - 8)); return `<rect x="${(i * (bw + gap)).toFixed(1)}" y="${(H - h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${x.hoje ? '#F5B70B' : x.fut ? '#E7E9EE' : '#3B6BFF'}" opacity="${x.fut ? 1 : x.hoje ? 1 : .85}"><title>${x.d.split('-').reverse().join('/')}: ${isQtd() ? x.v + ' vendas' : brl0(x.v)}</title></rect>`; }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Vendas por dia">${bars}</svg>
+    <div class="chart-leg"><span>Dia 1</span><span>Melhor dia: ${best.d.split('-')[2]}/${best.d.split('-')[1]} · ${isQtd() ? best.v + ' vendas' : brl0(best.v)}</span><span>Dia ${days}</span></div>`;
+}
+
+function feed(vid, n, del = false) {
+  const arr = DATA.vendas.filter(s => !vid || s.vid === vid).sort((a, b) => b.data.localeCompare(a.data) || b.ts - a.ts).slice(0, n);
+  if (!arr.length) return '<div class="empty"><b>Nenhuma venda ainda</b>Toque em “Lançar venda”.</div>';
+  return arr.map(s => { const v = vend(s.vid); if (!v) return ''; const isToday = s.data === today();
+    return `<div class="feed">${av(v)}<div class="mid"><b>${esc(first(v.nome))}</b> vendeu${s.cliente ? ' para ' + esc(s.cliente) : ''}<small>${isToday ? relTime(s.ts) : s.data.split('-').reverse().join('/')}</small></div><div class="v num">+${brl0(s.valor)}</div>${del ? `<button class="del" data-act="del-venda" data-id="${s.id}" aria-label="Excluir venda">${ic('trash')}</button>` : ''}</div>`; }).join('');
+}
+
+function vVendedor() {
+  if (!DATA.vendedores.length) return `<div class="page-h"><h2>Vendedor</h2></div><div class="wrap"><div class="card empty"><b>Sem vendedores</b>Cadastre a equipe em Ajustes.</div></div>`;
+  if (!vend(ui.vend)) ui.vend = DATA.vendedores[0].id;
+  const v = vend(ui.vend), m = new Date(), c = calcMes(v, m);
+  const rk = ranking(monthRange(m).from, monthRange(m).to), pos = rk.findIndex(r => r.v.id === v.id) + 1;
+  const above = pos > 1 ? rk[pos - 2] : null;
+  const prox = c.com && c.qtd ? (cfg().comTipo === 'pct' ? c.ticket * num(cfg().comValor) / 100 : num(cfg().comValor)) : (cfg().comTipo === 'pct' ? 0 : num(cfg().comValor));
+  const nVendas = c.prox ? (isQtd() ? Math.ceil(c.faltaProx) : (c.ticket ? Math.ceil(c.faltaProx / c.ticket) : 0)) : 0;
+  const maxAlvo = Math.max(100, ...c.faixas.map(f => f.alvo)) * 1.08;
+  return `
+  <div class="page-h"><h2>Painel do vendedor</h2><p>O que cada um vê no próprio celular</p></div>
+  <div class="wrap">
+    <div class="chips">${DATA.vendedores.map(x => `<button class="chip ${x.id === v.id ? 'on' : ''}" data-act="ver-vend" data-id="${x.id}">${av(x)}${esc(first(x.nome))}</button>`).join('')}</div>
+    <div class="me">
+      <div class="top">${av(v)}<div><h3>${esc(v.nome)}</h3><small>${esc(monthLabel(m))}</small></div><div class="rank"><b class="num">${pos}º</b><small>no ranking</small></div></div>
+      <div class="earn"><div><small>Já garantiu este mês</small><b class="num">${brl(c.total)}</b></div></div>
+      <div class="split">
+        <div><small>Vendido</small><b class="num">${isQtd() ? c.qtd + ' vend.' : kbrl(c.fat)}</b></div>
+        <div><small>Comissão</small><b class="num">${brl(c.com)}</b></div>
+        <div><small>Bônus</small><b class="num" style="color:${c.bonus ? '#34D399' : 'inherit'}">${brl0(c.bonus)}</b></div>
+      </div>
+    </div>
+
+    <div class="card section">
+      <div class="goal">
+        <div class="gt"><b class="num">${Math.round(c.pct)}% da meta</b><span>${fmtBase(c.base)} de ${fmtBase(c.meta)}</span></div>
+        <div class="track"><i class="${barCls(c.pct)}" style="width:${Math.min(100, c.pct / maxAlvo * 100)}%"></i>
+          ${c.faixas.map(f => `<div class="tick ${c.pct >= f.alvo ? 'hit' : ''}" style="left:${f.alvo / maxAlvo * 100}%"><span>${f.alvo}%</span></div>`).join('')}
+        </div>
+        <div class="fx-leg">${c.faixas.map(f => `<span class="${c.pct >= f.alvo ? 'hit' : ''}">${c.pct >= f.alvo ? '✓ ' : ''}${f.alvo}% → ${brl0(f.premio)}</span>`).join('')}</div>
+      </div>
+      ${c.prox ? `<div class="nextbox"><div class="ic">${ic('flag')}</div><div><b>Faltam ${fmtBase(c.faltaProx)} para o bônus de ${brl0(c.prox.premio)}</b><span>${!isQtd() && nVendas ? `≈ ${nVendas} venda${nVendas !== 1 ? 's' : ''} no seu ticket médio de ${brl0(c.ticket)} · ` : ''}no ritmo atual você fecha o mês com ${Math.round(c.proj / c.meta * 100)}%</span></div></div>`
+        : `<div class="nextbox"><div class="ic" style="background:var(--green-soft);color:var(--green)">${ic('trophy')}</div><div><b>Todas as faixas de bônus batidas!</b><span>Agora é brigar pelo 1º lugar${num(cfg().destaque) ? ' e pelo prêmio de destaque de ' + brl0(cfg().destaque) : ''}.</span></div></div>`}
+    </div>
+    <div class="card tip"><div class="ic">${ic('zap')}</div><div><b>A próxima venda vale ${brl(prox)} de comissão</b><span>${above ? `Faltam ${isQtd() ? (above.key - (isQtd() ? c.qtd : c.fat) + 1) + ' venda(s)' : brl0(above.key - c.fat + 1)} para passar ${esc(first(above.v.nome))} e subir para ${pos - 1}º` : 'Você está em 1º lugar. Segura a liderança!'}</span></div></div>
+
+    <div class="section"><div class="section-h"><h3>Vendas por dia</h3></div><div class="card chart">${dailyChart(v.id, m)}</div></div>
+    <div class="section"><div class="section-h"><h3>Vendas de ${esc(first(v.nome))}</h3></div><div class="card">${feed(v.id, 12, true)}</div></div>
+  </div>`;
+}
+
+function vRelatorio() {
+  const m = ui.relMes, rows = DATA.vendedores.map(v => ({ v, c: calcMes(v, m) })).sort((a, b) => b.c.base - a.c.base);
+  const lider = rows[0] && rows[0].c.base > 0 ? rows[0].v.id : null;
+  const dest = num(cfg().destaque);
+  const isCur = ymd(m).slice(0, 7) === today().slice(0, 7);
+  const tot = rows.reduce((a, r) => { const d = r.v.id === lider ? dest : 0; a.qtd += r.c.qtd; a.fat += r.c.fat; a.com += r.c.com; a.bonus += r.c.bonus + d; return a; }, { qtd: 0, fat: 0, com: 0, bonus: 0 });
+  return `
+  <div class="page-h"><h2>Fechamento</h2><p>Quanto pagar para cada um, sem montar planilha</p></div>
+  <div class="wrap">
+    <div class="monthnav"><button class="nb" data-act="rel-mes" data-v="-1" aria-label="Mês anterior">${ic('left')}</button><div style="flex:1;text-align:center;font-weight:800">${esc(monthLabel(m))}${isCur ? ' <span style="color:var(--muted);font-weight:600;font-size:12.5px">· parcial</span>' : ''}</div><button class="nb" data-act="rel-mes" data-v="1" aria-label="Próximo mês">${ic('right')}</button></div>
+    <div class="kpis" style="margin-top:12px;grid-template-columns:repeat(3,1fr)">
+      <div class="kpi"><span>Faturado</span><b class="num">${kbrl(tot.fat)}</b><em>${tot.qtd} vendas</em></div>
+      <div class="kpi"><span>Comissões</span><b class="num">${kbrl(tot.com)}</b><em>${tot.fat ? (tot.com / tot.fat * 100).toFixed(1).replace('.', ',') : 0}% do faturado</em></div>
+      <div class="kpi"><span>Bônus</span><b class="num">${kbrl(tot.bonus)}</b><em>${(n => n === 1 ? '1 bateu faixa' : n + ' bateram faixa')(rows.filter(r => r.c.bonus).length)}</em></div>
+    </div>
+    <div class="card section"><div class="tbl-wrap"><table class="tbl">
+      <thead><tr><th>Vendedor</th><th>Vendido</th><th>Meta</th><th>A pagar</th></tr></thead>
+      <tbody>${rows.map(r => { const d = r.v.id === lider ? dest : 0; return `<tr><td><b>${esc(first(r.v.nome))}</b>${d ? ` <span class="badge" style="background:#FFF4DE;color:#B45309">1º</span>` : ''}<small class="sm">com. ${brl(r.c.com)}${r.c.bonus + d ? ` + bônus ${brl0(r.c.bonus + d)}` : ''}</small></td><td class="num">${kbrl(r.c.fat)}<small class="sm">${r.c.qtd} vendas</small></td><td class="num" style="color:${r.c.pct >= 100 ? 'var(--green)' : 'inherit'};font-weight:700">${Math.round(r.c.pct)}%</td><td class="num"><b>${brl(r.c.total + d)}</b></td></tr>`; }).join('')}</tbody>
+      <tfoot><tr><td>Total</td><td class="num">${kbrl(tot.fat)}</td><td></td><td class="num">${brl(tot.com + tot.bonus)}</td></tr></tfoot>
+    </table></div></div>
+    <div class="btn-row">
+      <button class="btn sec" data-act="copy-rel">${ic('copy')} Copiar tabela</button>
+      <a class="btn green" href="https://wa.me/?text=${encodeURIComponent(resumoWa(m, rows, lider))}" target="_blank" rel="noopener">${ic('wa')} Enviar no grupo</a>
+    </div>
+    <p class="foot">Comissão: ${cfg().comTipo === 'pct' ? num(cfg().comValor).toString().replace('.', ',') + '% sobre o valor vendido' : brl(cfg().comValor) + ' por venda'} · Bônus pela maior faixa batida: ${cfg().faixas.slice().sort((a, b) => a.alvo - b.alvo).map(f => `${f.alvo}% = ${brl0(f.premio)}`).join(', ')}${dest ? ` · Destaque do mês: ${brl0(dest)}` : ''}.<br>As regras mudam em Ajustes e o cálculo refaz na hora.</p>
+  </div>`;
+}
+function resumoWa(m, rows, lider) {
+  const med = ['🥇', '🥈', '🥉'];
+  return `*Placar de Vendas — ${cfg().empresa}*\n${monthLabel(m)}\n\n` + rows.map((r, i) => `${med[i] || (i + 1) + 'º'} ${r.v.nome}: ${isQtd() ? r.c.qtd + ' vendas' : brl0(r.c.fat)} (${Math.round(r.c.pct)}% da meta)${r.v.id === lider && num(cfg().destaque) ? ' — destaque' : ''}`).join('\n') +
+    `\n\nTotal da equipe: ${isQtd() ? rows.reduce((a, r) => a + r.c.qtd, 0) + ' vendas' : brl0(rows.reduce((a, r) => a + r.c.fat, 0))}`;
+}
+
+function vAjustes() {
+  const c = cfg();
+  return `
+  <div class="page-h"><h2>Ajustes</h2><p>As regras da sua empresa. Mudou aqui, o placar recalcula tudo.</p></div>
+  <div class="wrap">
+    <form id="f-cfg" class="f">
+      <div class="cfg-sec"><h4>Empresa</h4><div class="card cfg-card">
+        <div class="fld"><label>Nome que aparece no placar</label><input name="empresa" value="${esc(c.empresa)}"></div>
+      </div></div>
+      <div class="cfg-sec"><h4>Meta</h4><div class="card cfg-card">
+        <div class="row2">
+          <div class="fld"><label>A meta é em</label><select name="metaTipo"><option value="valor" ${c.metaTipo === 'valor' ? 'selected' : ''}>Valor vendido (R$)</option><option value="qtd" ${c.metaTipo === 'qtd' ? 'selected' : ''}>Quantidade de vendas</option></select></div>
+          <div class="fld"><label>Meta mensal padrão</label><input name="meta" inputmode="decimal" value="${c.metaTipo === 'qtd' ? c.meta : num(c.meta).toLocaleString('pt-BR')}"></div>
+        </div>
+        <div class="fld"><div class="hint" style="margin-top:0">Dá para dar uma meta diferente para cada vendedor na lista da equipe, mais abaixo.</div></div>
+      </div></div>
+      <div class="cfg-sec"><h4>Comissão</h4><div class="card cfg-card">
+        <div class="row2">
+          <div class="fld"><label>Tipo</label><select name="comTipo"><option value="pct" ${c.comTipo === 'pct' ? 'selected' : ''}>% sobre o valor</option><option value="fixo" ${c.comTipo === 'fixo' ? 'selected' : ''}>R$ fixo por venda</option></select></div>
+          <div class="fld"><label>${c.comTipo === 'pct' ? 'Percentual (%)' : 'Valor por venda (R$)'}</label><input name="comValor" inputmode="decimal" value="${String(c.comValor).replace('.', ',')}"></div>
+        </div>
+      </div></div>
+      <div class="cfg-sec"><h4>Bônus por meta batida</h4><div class="card cfg-card" id="faixas">
+        ${c.faixas.map((f, i) => `<div class="faixa">
+          <div class="fld"><label>${i === 0 ? 'Bateu (% da meta)' : '&nbsp;'}</label><input name="f_alvo_${i}" inputmode="numeric" value="${f.alvo}"></div>
+          <div class="fld"><label>${i === 0 ? 'Ganha (R$)' : '&nbsp;'}</label><input name="f_premio_${i}" inputmode="decimal" value="${String(f.premio).replace('.', ',')}"></div>
+          <button type="button" class="icon-x" data-act="del-faixa" data-v="${i}" aria-label="Remover faixa">${ic('x')}</button></div>`).join('')}
+        <button type="button" class="btn sec sm" data-act="add-faixa">${ic('plus')} Adicionar faixa</button>
+        <div class="fld"><label>Prêmio para o 1º lugar do mês (R$)</label><input name="destaque" inputmode="decimal" value="${String(c.destaque || 0).replace('.', ',')}"><div class="hint">O vendedor ganha só a maior faixa que bateu (as faixas não somam). Coloque 0 para não ter prêmio de destaque.</div></div>
+      </div></div>
+      <button class="btn brand" type="submit">${ic('check')} Salvar regras</button>
+    </form>
+
+    <div class="cfg-sec"><h4>Equipe · ${DATA.vendedores.length} vendedores</h4><div class="card">
+      ${DATA.vendedores.map(v => `<div class="vrow">${av(v)}<input value="${esc(v.nome)}" data-vname="${v.id}" aria-label="Nome"><input class="mt num" value="${v.meta ? (isQtd() ? v.meta : num(v.meta).toLocaleString('pt-BR')) : ''}" placeholder="meta padrão" data-vmeta="${v.id}" inputmode="decimal" aria-label="Meta individual"><button class="icon-x" data-act="del-vend" data-id="${v.id}" aria-label="Remover">${ic('trash')}</button></div>`).join('')}
+      <div style="padding:12px 14px"><button class="btn sec sm" data-act="add-vend">${ic('plus')} Adicionar vendedor</button></div>
+    </div></div>
+
+    <div class="cfg-sec"><h4>Trazer da planilha</h4><div class="card cfg-card">
+      <div style="font-size:13.5px;color:var(--ink2);line-height:1.5">Já controla em planilha? Selecione as colunas <b>vendedor, data e valor</b> no Excel ou no Google Planilhas, copie e cole aqui. O placar monta tudo sozinho.</div>
+      <button class="btn sec" data-act="import">${ic('upload')} Colar vendas da planilha</button>
+    </div></div>
+
+    <div class="cfg-sec"><h4>Dados</h4><div class="f">
+      <button class="btn sec" data-act="reset">Restaurar dados de exemplo</button>
+      <button class="btn danger" data-act="zerar">Apagar tudo e começar do zero</button>
+    </div></div>
+    <p class="foot">Placar de Vendas · demonstração<br>Na versão da sua equipe, cada vendedor lança pelo próprio celular e o placar atualiza para todos na hora.</p>
+  </div>`;
+}
+
+/* ======================= casca ======================= */
+const VIEWS = { placar: vPlacar, vendedor: vVendedor, relatorio: vRelatorio, ajustes: vAjustes };
+function renderShell() {
+  $('#root').innerHTML = `
+  <div class="demo-strip">Demonstração feita por <a href="https://0metatron.github.io/App-s/" target="_blank" rel="noopener">Cesar</a> · os dados de exemplo são fictícios</div>
+  <div class="app">
+    <header class="topbar">
+      <div class="logo">${ic('trophy')}</div>
+      <div class="tb-txt"><h1 id="tb-name">${esc(cfg().empresa)}</h1><small>Placar de Vendas</small></div>
+      <button class="tbtn" data-act="tv">${ic('tv')} Telão</button>
+    </header>
+    <main id="main"></main>
+  </div>
+  <nav class="nav"><div class="nav-in">
+    ${[['placar', 'Placar', 'trophy'], ['vendedor', 'Vendedor', 'user'], ['relatorio', 'Fechamento', 'doc'], ['ajustes', 'Ajustes', 'gear']].map(([k, l, i]) => `<button data-act="nav" data-v="${k}" class="${view === k ? 'on' : ''}">${ic(i)}${l}</button>`).join('')}
+  </div></nav>
+  <button class="fab" data-act="nova">${ic('plus')} Lançar venda</button>`;
+}
+function render(keep) {
+  const y = window.scrollY;
+  $('#main').innerHTML = VIEWS[view]();
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('on', b.dataset.v === view));
+  $('.fab').hidden = view === 'ajustes' || view === 'relatorio';
+  window.scrollTo(0, keep ? y : 0);
+  if (!$('#tv').hidden) renderTv();
+}
+
+/* ======================= sheet ======================= */
+function openSheet(html) { $('#sheet-body').innerHTML = html; $('#sheet').hidden = false; document.body.style.overflow = 'hidden'; $('.sheet').scrollTop = 0; }
+function closeSheet() { $('#sheet').hidden = true; document.body.style.overflow = ''; }
+const shHead = (t, sub = '') => `<div class="sh-h"><div style="flex:1"><h3>${t}</h3>${sub ? `<p>${sub}</p>` : ''}</div><button class="x" data-act="close-sheet" aria-label="Fechar">${ic('x')}</button></div>`;
+
+function openNova() {
+  if (!DATA.vendedores.length) { toast('Cadastre um vendedor em Ajustes primeiro'); view = 'ajustes'; render(); return; }
+  const sel = vend(ui.lastVend) ? ui.lastVend : (view === 'vendedor' && vend(ui.vend) ? ui.vend : DATA.vendedores[0].id);
+  openSheet(`
+    ${shHead('Lançar venda', 'Leva 5 segundos. O placar atualiza na hora.')}
+    <form id="f-venda" class="f" autocomplete="off">
+      <input type="hidden" name="vid" value="${sel}">
+      <div class="fld"><label>Quem vendeu</label><div class="pick">${DATA.vendedores.map(v => `<button type="button" class="${v.id === sel ? 'on' : ''}" data-act="pick-vend" data-id="${v.id}">${av(v)}${esc(first(v.nome))}</button>`).join('')}</div></div>
+      <div class="fld"><label>Valor da venda</label><input class="big-input num" name="valor" inputmode="decimal" placeholder="R$ 0,00" required></div>
+      <div class="row2">
+        <div class="fld"><label>Data</label><input type="date" name="data" value="${today()}" max="${today()}" required></div>
+        <div class="fld"><label>Cliente (opcional)</label><input name="cliente" placeholder="Nome"></div>
+      </div>
+      <div id="prev"></div>
+      <button class="btn brand" type="submit">${ic('check')} Lançar venda</button>
+    </form>`);
+  setTimeout(() => { try { $('#f-venda [name=valor]').focus(); } catch (e) {} }, 300);
+  previewVenda();
+}
+function previewVenda() {
+  const f = $('#f-venda'); if (!f) return;
+  const v = vend(f.vid.value), val = parseMoney(f.valor.value);
+  if (!v || !val) { $('#prev').innerHTML = ''; return; }
+  const before = calcMes(v), com = cfg().comTipo === 'pct' ? val * num(cfg().comValor) / 100 : num(cfg().comValor);
+  const newBase = before.base + (isQtd() ? 1 : val), newPct = before.meta ? newBase / before.meta * 100 : 0;
+  const hit = before.faixas.filter(fx => newPct >= fx.alvo && before.pct < fx.alvo).pop();
+  $('#prev').innerHTML = `<div class="preview-sale">${esc(first(v.nome))} ganha <b>${brl(com)}</b> de comissão com essa venda${hit ? ` e <b>libera o bônus de ${brl0(hit.premio)}</b> (${hit.alvo}% da meta) 🎉` : ` e vai para <b>${Math.round(newPct)}%</b> da meta`}.</div>`;
+}
+async function saveVenda(f) {
+  const vid = f.vid.value, valor = parseMoney(f.valor.value), data = f.data.value;
+  if (!valor || valor <= 0) { toast('Informe o valor da venda'); f.valor.focus(); return; }
+  const v = vend(vid), m = fromYmd(data);
+  const per = monthRange(new Date()), sameMonth = data >= per.from && data <= per.to;
+  const posBefore = sameMonth ? ranking(per.from, per.to).findIndex(r => r.v.id === vid) : -1;
+  const before = calcMes(v, m);
+  DATA.vendas.push({ id: uid(), vid, valor, data, cliente: (f.cliente.value || '').trim(), ts: Date.now() });
+  save(); ui.lastVend = vid; closeSheet();
+  const after = calcMes(v, m);
+  const posAfter = sameMonth ? ranking(per.from, per.to).findIndex(r => r.v.id === vid) : -1;
+  const hit = after.faixas.filter(fx => after.pct >= fx.alvo && before.pct < fx.alvo).pop();
+  render(true);
+  if (hit) toast(`🏆 ${first(v.nome)} bateu ${hit.alvo}% da meta e liberou o bônus de ${brl0(hit.premio)}!`, 'win');
+  else if (posAfter > -1 && posAfter < posBefore) toast(`🚀 ${first(v.nome)} subiu para ${posAfter + 1}º lugar no mês!`, 'win');
+  else toast(`Venda de ${brl0(valor)} lançada para ${first(v.nome)} · +${brl(after.com - before.com)}`);
+}
+
+/* importar da planilha */
+let importRows = [];
+function openImport() {
+  openSheet(`
+    ${shHead('Colar vendas da planilha', 'Copie as colunas vendedor, data e valor e cole aqui.')}
+    <div class="f">
+      <div class="fld"><textarea id="imp-txt" placeholder="Ana Beatriz	03/11/2026	R$ 1.250,00&#10;Carlos Eduardo	03/11/2026	890&#10;…"></textarea>
+        <div class="hint">A ordem das colunas não importa e o cabeçalho é ignorado. Vendedores que não existirem são criados.</div></div>
+      <div id="imp-prev"></div>
+      <button class="btn brand" id="imp-btn" data-act="do-import" disabled>${ic('upload')} Importar</button>
+    </div>`);
+}
+function parseImport(txt) {
+  const rows = [];
+  txt.split(/\r?\n/).forEach(line => {
+    if (!line.trim()) return;
+    const cells = line.includes('\t') ? line.split('\t') : line.includes(';') ? line.split(';') : line.split(',');
+    let data = null, valor = null, nome = null;
+    cells.map(c => c.trim()).forEach(c => {
+      if (!c) return;
+      let m;
+      if (!data && (m = c.match(/^(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?$/))) { let y = m[3] ? num(m[3]) : new Date().getFullYear(); if (y < 100) y += 2000; data = `${y}-${pad(m[2])}-${pad(m[1])}`; return; }
+      if (!data && (m = c.match(/^(\d{4})-(\d{2})-(\d{2})/))) { data = `${m[1]}-${m[2]}-${m[3]}`; return; }
+      if (valor === null && /\d/.test(c) && !/[a-zà-ú]{3,}/i.test(c.replace(/r\$/i, ''))) { const v = parseMoney(c); if (v > 0) { valor = v; return; } }
+      if (!nome && /[a-zà-ú]{2,}/i.test(c) && !/^(vendedor|nome|data|valor|total|cliente|consultor)$/i.test(c)) nome = c;
+    });
+    if (nome && valor) rows.push({ nome, valor, data: data || today() });
+  });
+  return rows;
+}
+function doImport() {
+  if (!importRows.length) return;
+  let novos = 0;
+  importRows.forEach(r => {
+    let v = DATA.vendedores.find(x => x.nome.trim().toLowerCase() === r.nome.trim().toLowerCase());
+    if (!v) { v = { id: uid(), nome: r.nome.trim(), meta: 0 }; DATA.vendedores.push(v); novos++; }
+    DATA.vendas.push({ id: uid(), vid: v.id, valor: r.valor, data: r.data, cliente: '', ts: Date.now() - Math.random() * 1e7 });
+  });
+  save(); const n = importRows.length; importRows = []; closeSheet(); view = 'placar'; render();
+  toast(`${n} vendas importadas${novos ? ` · ${novos} vendedor${novos > 1 ? 'es' : ''} novo${novos > 1 ? 's' : ''}` : ''}`);
+}
+
+/* ======================= telão ======================= */
+let tvTimer = null;
+function openTv() { $('#tv').hidden = false; document.body.style.overflow = 'hidden'; renderTv(); clearInterval(tvTimer); tvTimer = setInterval(renderTv, 20000); try { document.documentElement.requestFullscreen && document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {} }
+function closeTv() { $('#tv').hidden = true; document.body.style.overflow = ''; clearInterval(tvTimer); try { document.fullscreenElement && document.exitFullscreen(); } catch (e) {} }
+function renderTv() {
+  const t = new Date(), mr = monthRange(t), rk = ranking(mr.from, mr.to);
+  const team = stats(null, mr.from, mr.to), hoje = stats(null, today(), today());
+  const metaTeam = DATA.vendedores.reduce((a, v) => a + (num(v.meta) || num(cfg().meta)), 0);
+  const maxK = Math.max(1, ...rk.map(r => r.key));
+  $('#tv').innerHTML = `<div class="tv-in">
+    <div class="tv-h"><div class="logo" style="width:48px;height:48px;border-radius:14px">${ic('trophy')}</div><div><h2>${esc(cfg().empresa)}</h2><small>Placar de ${esc(monthLabel(t).toLowerCase())} · atualizado às ${t.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</small></div><button class="tbtn" data-act="tv-close">${ic('x')} Sair</button></div>
+    <div class="tv-kpis">
+      <div><small>Vendido no mês</small><b class="num">${isQtd() ? team.qtd : brl0(team.fat)}</b></div>
+      <div><small>Meta da equipe</small><b class="num">${metaTeam ? Math.round((isQtd() ? team.qtd : team.fat) / metaTeam * 100) : 0}%</b></div>
+      <div><small>Vendas hoje</small><b class="num">${hoje.qtd} · ${kbrl(hoje.fat)}</b></div>
+    </div>
+    <div class="tv-list">${rk.map((r, i) => `<div class="tv-row ${i === 0 && r.key > 0 ? 'first' : ''}"><div class="pos">${i + 1}º</div>${av(r.v)}<div class="mid"><div class="n">${esc(r.v.nome)}</div><div class="bar"><i class="${barCls(r.mc.pct)}" style="width:${r.key / maxK * 100}%"></i></div></div><div class="v"><b class="num">${isQtd() ? r.p.qtd : brl0(r.p.fat)}</b><small>${Math.round(r.mc.pct)}% da meta</small></div></div>`).join('')}</div>
+    <div class="tv-foot">Deixe esta tela aberta na TV da loja. Ela se atualiza sozinha.</div>
+  </div>`;
+}
+
+/* ======================= toast / copiar ======================= */
+function toast(msg, kind = '') {
+  const el = document.createElement('div'); el.className = 'toast ' + kind; el.textContent = msg;
+  $('#toasts').appendChild(el); setTimeout(() => el.remove(), kind === 'win' ? 4500 : 2800);
+}
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; }
+  catch (e) { const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (_) {} ta.remove(); return ok; }
+}
+
+/* ======================= eventos ======================= */
+let armed = null;
+function arm(el, label) { if (armed === el) { armed = null; return true; } armed = el; el.dataset.txt = el.innerHTML; el.innerHTML = label; setTimeout(() => { if (armed === el) { el.innerHTML = el.dataset.txt; armed = null; } }, 3500); return false; }
+function readCfgForm() {
+  const f = $('#f-cfg'); if (!f) return;
+  const fd = new FormData(f), c = cfg();
+  c.empresa = (fd.get('empresa') || '').trim() || 'Minha Loja';
+  c.metaTipo = fd.get('metaTipo'); c.meta = parseMoney(fd.get('meta'));
+  c.comTipo = fd.get('comTipo'); c.comValor = parseMoney(fd.get('comValor'));
+  c.destaque = parseMoney(fd.get('destaque'));
+  c.faixas = c.faixas.map((_, i) => ({ alvo: num(fd.get('f_alvo_' + i)), premio: parseMoney(fd.get('f_premio_' + i)) })).filter(x => x.alvo > 0);
+}
+document.addEventListener('click', async e => {
+  if (e.target.closest('a[href]')) return;
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id, v = el.dataset.v;
+  switch (a) {
+    case 'nav': view = v; render(); break;
+    case 'periodo': ui.periodo = v; render(true); break;
+    case 'ver-vend': ui.vend = id; if (view !== 'vendedor') { view = 'vendedor'; render(); } else render(true); break;
+    case 'nova': openNova(); break;
+    case 'pick-vend': { const f = $('#f-venda'); f.vid.value = id; f.querySelectorAll('.pick button').forEach(b => b.classList.toggle('on', b.dataset.id === id)); previewVenda(); break; }
+    case 'close-sheet': closeSheet(); break;
+    case 'tv': openTv(); break;
+    case 'tv-close': closeTv(); break;
+    case 'rel-mes': { const m = new Date(ui.relMes); m.setDate(1); m.setMonth(m.getMonth() + num(v)); ui.relMes = m; render(true); break; }
+    case 'copy-rel': {
+      const m = ui.relMes, rows = DATA.vendedores.map(x => ({ x, c: calcMes(x, m) })).sort((p, q) => q.c.base - p.c.base);
+      const lider = rows[0] && rows[0].c.base > 0 ? rows[0].x.id : null, f2 = n => num(n).toFixed(2).replace('.', ',');
+      const tsv = ['Vendedor\tVendas\tFaturado\t% Meta\tComissão\tBônus\tA pagar', ...rows.map(r => { const d = r.x.id === lider ? num(cfg().destaque) : 0; return [r.x.nome, r.c.qtd, f2(r.c.fat), Math.round(r.c.pct) + '%', f2(r.c.com), f2(r.c.bonus + d), f2(r.c.total + d)].join('\t'); })].join('\n');
+      toast(await copyText(tsv) ? 'Copiado! É só colar no Excel ou Google Planilhas' : 'Não deu para copiar neste navegador'); break;
+    }
+    case 'del-venda': if (!arm(el, '?')) break; DATA.vendas = DATA.vendas.filter(s => s.id !== id); save(); render(true); toast('Venda excluída'); break;
+    case 'add-faixa': readCfgForm(); { const fx = cfg().faixas, last = fx[fx.length - 1]; fx.push({ alvo: last ? last.alvo + 20 : 100, premio: last ? Math.round(num(last.premio) * 1.5) : 200 }); } render(true); break;
+    case 'del-faixa': readCfgForm(); cfg().faixas.splice(num(v), 1); render(true); break;
+    case 'add-vend': { const nv = { id: uid(), nome: 'Novo vendedor', meta: 0 }; DATA.vendedores.push(nv); save(); render(true); const inp = document.querySelector(`[data-vname="${nv.id}"]`); if (inp) { inp.focus(); inp.select(); } break; }
+    case 'del-vend': { if (!arm(el, '?')) break; const n = DATA.vendas.filter(s => s.vid === id).length; DATA.vendedores = DATA.vendedores.filter(x => x.id !== id); DATA.vendas = DATA.vendas.filter(s => s.vid !== id); save(); render(true); toast(`Vendedor removido${n ? ` com ${n} vendas` : ''}`); break; }
+    case 'import': importRows = []; openImport(); break;
+    case 'do-import': doImport(); break;
+    case 'reset': if (!arm(el, 'Toque de novo para confirmar')) break; DATA = seed(); save(); view = 'placar'; renderShell(); render(); toast('Dados de exemplo restaurados'); break;
+    case 'zerar': if (!arm(el, 'Toque de novo: apaga todas as vendas')) break; DATA.vendas = []; DATA.vendedores = []; save(); render(true); toast('Tudo apagado. Cadastre sua equipe.'); break;
+  }
+});
+document.addEventListener('input', e => {
+  const t = e.target;
+  if (t.closest('#f-venda')) previewVenda();
+  if (t.id === 'imp-txt') {
+    importRows = parseImport(t.value);
+    const names = [...new Set(importRows.map(r => r.nome.toLowerCase()))].length, total = importRows.reduce((a, r) => a + r.valor, 0);
+    $('#imp-prev').innerHTML = t.value.trim() ? (importRows.length ? `<div class="preview-sale">Encontrei <b>${importRows.length} vendas</b> de <b>${names} vendedor${names > 1 ? 'es' : ''}</b>, somando <b>${brl(total)}</b>.</div>` : `<div class="preview-sale" style="background:var(--red-soft);color:var(--red)">Não reconheci as vendas. Confira se tem as colunas vendedor e valor.</div>`) : '';
+    $('#imp-btn').disabled = !importRows.length;
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.dataset.vname) { const v = vend(t.dataset.vname); if (v) { v.nome = t.value.trim() || v.nome; save(); } }
+  if (t.dataset.vmeta) { const v = vend(t.dataset.vmeta); if (v) { v.meta = parseMoney(t.value); save(); toast(v.meta ? `Meta de ${first(v.nome)}: ${fmtBase(v.meta)}` : `${first(v.nome)} usa a meta padrão`); } }
+  if (t.name === 'comTipo' || t.name === 'metaTipo') { readCfgForm(); if (t.name === 'metaTipo') { cfg().meta = t.value === 'qtd' ? 40 : 30000; DATA.vendedores.forEach(v => v.meta = 0); } save(); render(true); }
+});
+document.addEventListener('submit', e => {
+  e.preventDefault(); const f = e.target;
+  if (f.id === 'f-venda') saveVenda(f);
+  if (f.id === 'f-cfg') { readCfgForm(); save(); $('#tb-name').textContent = cfg().empresa; document.title = cfg().empresa + ' · Placar'; toast('Regras salvas. Placar recalculado.'); render(true); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#tv').hidden) closeTv(); else closeSheet(); } });
+
+/* ======================= exemplo ======================= */
+function seed() {
+  let s = 20261115; const rnd = () => (s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296;
+  const vendedores = [
+    ['Ana Beatriz Rocha', 1.3], ['Carlos Eduardo Lima', 1.12], ['Fernanda Souza', 1.02],
+    ['João Victor Alves', 0.88], ['Patrícia Mendes', 0.76], ['Rafael Monteiro', 0.62]
+  ].map(([nome, k]) => ({ id: uid(), nome, meta: 0, k }));
+  const clientes = ['Marcos P.', 'Juliana R.', 'Supermercado Bom Preço', 'Débora S.', 'Oficina do Zé', 'Luana T.', 'Renato C.', 'Farmácia Central', 'Bruna M.', 'Edilson F.', 'Clínica Vida', 'Tatiane O.'];
+  const vendas = [], t = new Date(), start = new Date(t.getFullYear(), t.getMonth() - 1, 1);
+  for (let d = new Date(start); ymd(d) <= today(); d = addDays(d, 1)) {
+    const dow = d.getDay(), isToday = ymd(d) === today();
+    vendedores.forEach(v => {
+      const base = dow === 0 ? 0.25 : dow === 6 ? 1.3 : 1;
+      let n = Math.floor(rnd() * 3.6 * v.k * base + (rnd() < 0.4 * v.k ? 1 : 0));
+      if (isToday) n = v.k > 0.9 ? 1 + (rnd() < 0.4 ? 1 : 0) : (rnd() < 0.55 ? 1 : 0);
+      for (let i = 0; i < n; i++) {
+        const valor = Math.round((180 + rnd() * rnd() * 2400 * (0.75 + v.k * 0.35)) / 10) * 10;
+        const ts = isToday ? Date.now() - Math.floor(rnd() * Math.min(9, Math.max(1, t.getHours() - 7)) * 36e5) : d.getTime() + 9 * 36e5 + rnd() * 9 * 36e5;
+        vendas.push({ id: uid(), vid: v.id, valor, data: ymd(d), cliente: rnd() < 0.7 ? clientes[Math.floor(rnd() * clientes.length)] : '', ts });
+      }
+    });
+  }
+  vendedores.forEach(v => delete v.k);
+  return {
+    cfg: { empresa: 'Sua Loja', metaTipo: 'valor', meta: 30000, comTipo: 'pct', comValor: 3, faixas: [{ alvo: 80, premio: 150 }, { alvo: 100, premio: 400 }, { alvo: 120, premio: 800 }], destaque: 300 },
+    vendedores, vendas
+  };
+}
+
+load(); renderShell(); render();
+setInterval(() => { if ($('#sheet').hidden && $('#tv').hidden && view === 'placar') render(true); }, 60000);
+</script>
+</body>
+</html>
