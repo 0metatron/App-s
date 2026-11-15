@@ -75,6 +75,8 @@ h1,h2,h3{font-family:var(--f-disp);margin:0;text-wrap:balance;line-height:1.05}
 .proj .ver{display:inline-block;margin-top:12px;font-weight:700;color:var(--azul);text-decoration:none}
 
 .tela{width:150px;aspect-ratio:9/17;border-radius:22px;background:var(--tinta);padding:7px;box-shadow:0 14px 30px rgba(19,23,28,.18)}
+.tela.foto{padding:5px;aspect-ratio:auto;height:auto;overflow:hidden}
+.tela.foto img{display:block;width:100%;height:auto;border-radius:17px}
 .tela>div{width:100%;height:100%;border-radius:16px;overflow:hidden;padding:10px 9px;display:flex;flex-direction:column;gap:6px;font-size:8px}
 .t-moto{background:#111214;color:#f2f3f5}
 .t-moto .bn{background:#e11d2a;border-radius:6px;padding:6px;font-weight:800;font-size:8px}
@@ -117,7 +119,9 @@ h1,h2,h3{font-family:var(--f-disp);margin:0;text-wrap:balance;line-height:1.05}
 .fim .tel{display:block;margin-top:12px;font-weight:700;font-size:18px;letter-spacing:.02em}
 .nota{text-align:center;color:var(--cinza);font-size:12px;padding-bottom:30px}
 
-@media (max-width:460px){.proj{grid-template-columns:112px minmax(0,1fr);gap:14px}.tela{width:112px;border-radius:18px;padding:5px}.tela>div{border-radius:13px;padding:8px 7px;font-size:7px}.ganhos{grid-template-columns:1fr}.ganhos div{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center}.ganhos b{margin:0}}
+@media (max-width:460px){.proj{grid-template-columns:112px minmax(0,1fr);gap:14px}.tela{width:112px;border-radius:18px;padding:5px}.tela.foto{padding:5px;aspect-ratio:auto;height:auto;overflow:hidden}
+.tela.foto img{display:block;width:100%;height:auto;border-radius:17px}
+.tela>div{border-radius:13px;padding:8px 7px;font-size:7px}.ganhos{grid-template-columns:1fr}.ganhos div{display:grid;grid-template-columns:120px 1fr;gap:10px;align-items:center}.ganhos b{margin:0}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -157,44 +161,50 @@ h1,h2,h3{font-family:var(--f-disp);margin:0;text-wrap:balance;line-height:1.05}
       <div><small>Qualquer negócio</small><h3>Controle de clientes</h3><p>Quem pediu orçamento, quem fechou, quem está esperando e quando ligar de novo. Sem cliente esquecido.</p><span class="res">Nenhuma venda perdida por esquecimento</span></div></div>
   </div>
 
-  <div class="sec-h" id="projetos"><h2>Projetos feitos</h2><span>teste os dois primeiros</span></div>
-  <p class="sec-p">Alguns apps que já construí. Os de empresa aparecem sem dados reais.</p>
+  <div class="sec-h" id="projetos"><h2>Projetos e demonstrações</h2><span>telas reais</span></div>
+  <p class="sec-p">As demonstrações funcionam de verdade: toque e teste no seu celular. Os apps de empresa aparecem sem dados reais.</p>
 
   <article class="proj">
-    <div class="tela" aria-hidden="true"><div class="t-zap"><div class="zh">Atendente virtual</div><i class="bb">Opa! Quer ver o cardápio? 🥤</i><i class="be">quero 2 de morango</i><i class="bb">Anotado! Entrega pra onde?</i><i class="be">Macapá</i><i class="bb">Pedido confirmado 🎉</i></div></div>
-    <div><span class="tag vivo">● Teste agora</span><h3>Robô de pedidos no WhatsApp</h3>
-      <p>Feito para uma marca de shakes de Macapá: o robô apresenta os sabores, monta o pedido, calcula a entrega, cuida do cartão fidelidade e manda o pedido pronto pro dono. Você mesmo pode conversar com ele.</p>
-      <ul><li>Atende 24 horas</li><li>Pedido completo</li><li>Fidelidade</li></ul>
-      <a class="ver" id="ver-bot" href="robo.html">Conversar com o robô →</a></div>
+    <div class="tela foto"><img src="img/robo.jpg" alt="Tela real: Robô de pedidos no WhatsApp" loading="lazy" width="540" height="1080"></div>
+    <div><span class="tag vivo">● Demonstração · teste agora</span><h3>Robô de pedidos no WhatsApp</h3>
+      <p>Para uma marca de shakes de Macapá: apresenta os sabores, monta o pedido com endereço e Pix, calcula a entrega, controla o cartão fidelidade e entrega o pedido pronto pro dono.</p>
+      <ul><li>Atende 24 horas</li><li>Pedido completo</li><li>Fidelidade</li></ul><a class="ver" href="robo.html">Conversar com o robô →</a></div>
   </article>
-
   <article class="proj">
-    <div class="tela" aria-hidden="true"><div class="t-moto"><div class="bn">CAMPANHA DO MÊS</div><div style="font-weight:700">Quanto cabe no bolso?</div><div class="gr"><i><s>Modelo A</s><b>R$ 213/mês</b></i><i><s>Modelo B</s><b>R$ 229/mês</b></i><i><s>Modelo C</s><b>R$ 270/mês</b></i><i><s>Modelo D</s><b>R$ 337/mês</b></i></div><div class="zp">Enviar no WhatsApp</div></div></div>
-    <div><span class="tag vivo">● Teste agora</span><h3>Simulador de vendas parceladas</h3>
-      <p>O cliente diz quanto pode pagar por mês e vê na hora o que cabe no bolso, comparando consórcio, financiamento e à vista. A simulação chega pronta no WhatsApp do vendedor. Feito para revenda de motos, adaptável a qualquer produto vendido parcelado.</p>
-      <ul><li>Captação de clientes</li><li>Loja edita preços sozinha</li></ul>
-      <a class="ver" id="ver-sim" href="simulador.html">Abrir a demonstração →</a></div>
+    <div class="tela foto"><img src="img/max.jpg" alt="Tela real: Robô de vendas para loja" loading="lazy" width="540" height="1080"></div>
+    <div><span class="tag vivo">● Demonstração · teste agora</span><h3>Robô de vendas para loja</h3>
+      <p>Para uma loja de smartwatches: mostra os modelos, ajuda o cliente a escolher pelo pulso e pelo estilo, apresenta os brindes da campanha e passa pro vendedor só quem já quer fechar.</p>
+      <ul><li>Ajuda a escolher</li><li>Campanhas</li><li>Cliente pronto pra fechar</li></ul><a class="ver" href="maximports.html">Testar o robô de vendas →</a></div>
   </article>
-
+  <article class="proj">
+    <div class="tela foto"><img src="img/sim.jpg" alt="Tela real: Simulador de vendas parceladas" loading="lazy" width="540" height="1080"></div>
+    <div><span class="tag vivo">● Demonstração · teste agora</span><h3>Simulador de vendas parceladas</h3>
+      <p>O cliente diz quanto pode pagar por mês e vê o que cabe no bolso, comparando consórcio, financiamento e à vista. A simulação chega pronta no WhatsApp do vendedor e a loja muda preços e taxas sozinha.</p>
+      <ul><li>Captação de clientes</li><li>Modo loja</li></ul><a class="ver" href="simulador.html">Abrir o simulador →</a></div>
+  </article>
+  <article class="proj">
+    <div class="tela foto"><img src="img/agenda.jpg" alt="Tela real: Agenda para profissionais de saúde" loading="lazy" width="540" height="1080"></div>
+    <div><span class="tag vivo">● Demonstração · teste agora</span><h3>Agenda para profissionais de saúde</h3>
+      <p>O paciente marca a consulta sozinho e recebe lembrete pra confirmar. O profissional vê a agenda da semana, quem confirmou e quem pediu pra remarcar. Segue as regras de divulgação da profissão e pede só os dados necessários.</p>
+      <ul><li>Menos faltas</li><li>Lembrete automático</li><li>Dados mínimos</li></ul><a class="ver" href="agenda-psicologo.html">Testar a agenda →</a></div>
+  </article>
   <article class="proj">
     <div class="tela" aria-hidden="true"><div class="t-placar"><div class="hd">Placar de Vendas · Novembro</div><div class="rk"><span>1</span><i style="--w:92%"></i></div><div class="rk"><span>2</span><i style="--w:78%"></i></div><div class="rk"><span>3</span><i style="--w:64%"></i></div><div class="rk"><span>4</span><i style="--w:41%"></i></div><div class="kp"><div>Meta<b>78%</b></div><div>Comissão<b>R$ 1.240</b></div></div></div></div>
-    <div><span class="tag">Gestão de equipe</span><h3>Placar de Vendas</h3>
+    <div><span class="tag">Gestão de equipe · em uso</span><h3>Placar de Vendas</h3>
       <p>Vendedores lançam as vendas na rua e acompanham meta e comissão em tempo real. Junto, um simulador de premiação em que cada colaborador calcula o próprio bônus pelas regras do seu setor.</p>
       <ul><li>Instalável no celular</li><li>Ranking e metas</li><li>Comissão automática</li></ul></div>
   </article>
-
   <article class="proj">
     <div class="tela" aria-hidden="true"><div class="t-caixa"><div style="font-weight:800;font-size:10px">Caixa de hoje</div><div class="ln"><span>Dinheiro</span><b>R$ 640</b></div><div class="ln"><span style="--c:#1f4fff">Pix</span><b>R$ 1.210</b></div><div class="ln"><span style="--c:#e8a317">Cartão</span><b>R$ 380</b></div><div class="tt"><span>Conferido</span><span>R$ 2.230</span></div></div></div>
-    <div><span class="tag">Financeiro</span><h3>Caixa e atendimento</h3>
+    <div><span class="tag">Financeiro · em uso</span><h3>Caixa e atendimento</h3>
       <p>A equipe lança recebimentos e atendimentos durante o dia, e o gestor fecha o caixa e acompanha os resultados sem montar planilha. Integrado ao Google Planilhas.</p>
-      <ul><li>Equipe lança pelo celular</li><li>Painel com resultados do dia</li></ul></div>
+      <ul><li>Equipe lança pelo celular</li><li>Painel do dia</li></ul></div>
   </article>
-
   <article class="proj">
-    <div class="tela" aria-hidden="true"><div class="t-erga"><div style="font-weight:800;letter-spacing:.06em;font-size:10px">Ergacy</div><div class="orb">12</div><div style="text-align:center;opacity:.7">NÍVEL</div><div class="ms"><span>Treino do dia</span><b>✓</b></div><div class="ms"><span>Ler 10 páginas</span><b>✓</b></div><div class="ms"><span>Estudar 60 min</span><span>…</span></div></div></div>
-    <div><span class="tag">Produto próprio</span><h3>Ergacy</h3>
-      <p>App de evolução pessoal em formato de jogo, com missões, hábitos, treino, estudo e finanças. Instalável no celular e já usado por pessoas que chegaram pelo Instagram.</p>
-      <ul><li>Funciona sem internet</li><li>Português e inglês</li></ul></div>
+    <div class="tela foto"><img src="img/erga.jpg" alt="Tela real: Ergacy" loading="lazy" width="540" height="1080"></div>
+    <div><span class="tag vivo">Produto próprio · público</span><h3>Ergacy</h3>
+      <p>App de evolução pessoal em formato de jogo, com missões, hábitos, treino, estudo, finanças e Índice de Evolução. Instalável no celular e já usado por pessoas que chegaram pelo Instagram.</p>
+      <ul><li>Funciona sem internet</li><li>Português e inglês</li></ul><a class="ver" href="https://0metatron.github.io/Erga-se/">Abrir o Ergacy →</a></div>
   </article>
 
   <div class="sec-h" style="margin-top:20px"><h2>Como funciona</h2><span>do papo ao app no ar</span></div>
@@ -217,7 +227,7 @@ h1,h2,h3{font-family:var(--f-disp);margin:0;text-wrap:balance;line-height:1.05}
 (function(){
   var msg=encodeURIComponent('Oi, Cesar! Vi seu portfólio e quero conversar sobre um app.');
   document.querySelectorAll('.zap-link').forEach(function(a){a.href='https://wa.me/5596984119968?text='+msg;a.target='_blank';a.rel='noopener'});
-  ['ver-sim','ver-bot'].forEach(function(id){var v=document.getElementById(id);if(v){v.target='_blank';v.rel='noopener'}});
+  document.querySelectorAll('a.ver').forEach(function(v){v.target='_blank';v.rel='noopener'});
 })();
 </script>
 </body>
