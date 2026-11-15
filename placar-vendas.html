@@ -267,6 +267,26 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke
 @keyframes drop{from{transform:translateY(-12px);opacity:0}}
 .empty{padding:28px 20px;text-align:center;color:var(--muted)}
 .empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+.chooser{min-height:100vh;background:radial-gradient(1100px 520px at 50% -10%,#1E3A8A 0%,#0B1220 62%);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:calc(28px + var(--sat)) 20px calc(28px + var(--sab))}
+.chooser .in{max-width:440px;width:100%;margin:0 auto}
+.chooser .logo{width:56px;height:56px;border-radius:17px}
+.chooser .logo svg{width:28px;height:28px}
+.chooser h1{font-size:30px;letter-spacing:-.03em;margin:18px 0 6px;font-weight:800}
+.chooser .sub{color:#B8C3D9;margin:0 0 22px;font-size:15px;line-height:1.5}
+.chooser .q{font-size:12.5px;font-weight:800;color:#7D8BA6;text-transform:uppercase;letter-spacing:.06em;margin:0 0 10px}
+.role-card{display:flex;gap:14px;align-items:flex-start;width:100%;text-align:left;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:18px;padding:16px;margin-bottom:10px}
+.role-card .ic{width:44px;height:44px;border-radius:13px;display:grid;place-items:center;flex:none}
+.role-card b{display:block;font-size:16.5px}
+.role-card span{display:block;color:#B8C3D9;font-size:13.5px;line-height:1.45;margin-top:3px}
+.role-card.on{border-color:#8FB0FF;background:rgba(59,107,255,.18)}
+.me-pick{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:4px 0 12px}
+.me-pick button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:#fff;border-radius:14px;padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:7px;font-weight:700;font-size:13px}
+.me-pick .av{width:38px;height:38px;border-radius:12px;font-size:13px}
+.how{margin-top:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:14px 16px}
+.how b{font-size:13px;color:#FFD66B;display:block;margin-bottom:6px}
+.how ol{margin:0;padding-left:18px;color:#C9D3E6;font-size:13.5px;line-height:1.6}
+.rolebadge{font-size:11px;font-weight:800;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.09);color:#C9D3E6;border:0;white-space:nowrap}
+.rk.self{background:#F5F8FF}
 .foot{text-align:center;color:var(--muted);font-size:12px;margin:26px 0 0;line-height:1.5}
 .pulse{animation:pulse .9s ease}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(18,161,80,.45)}100%{box-shadow:0 0 0 14px rgba(18,161,80,0)}}
@@ -385,7 +405,8 @@ function periodRange() {
 
 /* ======================= estado ======================= */
 let view = 'placar';
-const ui = { periodo: 'mes', vend: null, relMes: new Date(), lastVend: null };
+const ui = { periodo: 'mes', vend: null, relMes: new Date(), lastVend: null, role: LS.get('placar_role', null), me: LS.get('placar_me', null), pickMe: false };
+const isGestor = () => ui.role === 'gestor';
 
 /* ======================= telas ======================= */
 function barCls(p) { return p >= 100 ? 'c-ok' : p >= 70 ? 'c-mid' : 'c-low'; }
@@ -421,18 +442,18 @@ function vPlacar() {
     </div>
 
     <div class="section">
-      <div class="section-h"><h3>Ranking</h3><button class="link" data-act="tv">${'Modo telão'}</button></div>
+      <div class="section-h"><h3>Ranking</h3>${isGestor() ? `<button class="link" data-act="tv">Modo telão</button>` : ''}</div>
       <div class="seg">${[['hoje', 'Hoje'], ['semana', 'Semana'], ['mes', 'Mês']].map(([k, l]) => `<button class="${ui.periodo === k ? 'on' : ''}" data-act="periodo" data-v="${k}">${l}</button>`).join('')}</div>
       ${top.length >= 3 && top[0].key > 0 ? `<div class="podium">${[1, 0, 2].map(i => { const r = top[i]; return `
         <div class="pod p${i + 1}" data-act="ver-vend" data-id="${r.v.id}"><div class="medal">${i + 1}</div>${av(r.v)}
         <div class="n">${esc(first(r.v.nome))}</div><div class="v num">${isQtd() ? r.p.qtd : kbrl(r.p.fat)}</div><div class="s">${isQtd() ? 'vendas' : r.p.qtd + ' venda' + (r.p.qtd !== 1 ? 's' : '')}</div></div>`; }).join('')}</div>` : ''}
       <div class="card" style="margin-top:12px">${rk.map((r, i) => `
-        <div class="rk" data-act="ver-vend" data-id="${r.v.id}">
+        <div class="rk ${!isGestor() && r.v.id === ui.me ? 'self' : ''}" data-act="ver-vend" data-id="${r.v.id}">
           <div class="pos">${i + 1}º</div>${av(r.v)}
           <div class="mid">
-            <div class="t"><span>${esc(r.v.nome)}${r.mc.pct >= 100 ? '<span class="badge">META ✓</span>' : ''}</span><b class="num">${isQtd() ? r.p.qtd + ' vend.' : brl0(r.p.fat)}</b></div>
+            <div class="t"><span>${esc(r.v.nome)}${!isGestor() && r.v.id === ui.me ? ' (você)' : ''}${r.mc.pct >= 100 ? '<span class="badge">META ✓</span>' : ''}</span><b class="num">${isQtd() ? r.p.qtd + ' vend.' : brl0(r.p.fat)}</b></div>
             <div class="bar"><i class="${barCls(r.mc.pct)}" style="width:${Math.min(100, r.mc.pct)}%"></i></div>
-            <div class="s"><span>${Math.round(r.mc.pct)}% da meta</span><span>${ui.periodo === 'mes' ? 'ganha ' + brl0(r.mc.total) : r.p.qtd + ' venda' + (r.p.qtd !== 1 ? 's' : '') + ' ' + per.label}</span></div>
+            <div class="s"><span>${Math.round(r.mc.pct)}% da meta</span><span>${ui.periodo === 'mes' && (isGestor() || r.v.id === ui.me) ? 'ganha ' + brl0(r.mc.total) : r.p.qtd + ' venda' + (r.p.qtd !== 1 ? 's' : '') + ' ' + per.label}</span></div>
           </div>
         </div>`).join('') || '<div class="empty"><b>Sem vendedores</b>Cadastre a equipe em Ajustes.</div>'}</div>
     </div>
@@ -467,7 +488,8 @@ function feed(vid, n, del = false) {
     return `<div class="feed">${av(v)}<div class="mid"><b>${esc(first(v.nome))}</b> vendeu${s.cliente ? ' para ' + esc(s.cliente) : ''}<small>${isToday ? relTime(s.ts) : s.data.split('-').reverse().join('/')}</small></div><div class="v num">+${brl0(s.valor)}</div>${del ? `<button class="del" data-act="del-venda" data-id="${s.id}" aria-label="Excluir venda">${ic('trash')}</button>` : ''}</div>`; }).join('');
 }
 
-function vVendedor() {
+function vMeu() { ui.vend = ui.me; return vVendedor(true); }
+function vVendedor(self = false) {
   if (!DATA.vendedores.length) return `<div class="page-h"><h2>Vendedor</h2></div><div class="wrap"><div class="card empty"><b>Sem vendedores</b>Cadastre a equipe em Ajustes.</div></div>`;
   if (!vend(ui.vend)) ui.vend = DATA.vendedores[0].id;
   const v = vend(ui.vend), m = new Date(), c = calcMes(v, m);
@@ -477,9 +499,9 @@ function vVendedor() {
   const nVendas = c.prox ? (isQtd() ? Math.ceil(c.faltaProx) : (c.ticket ? Math.ceil(c.faltaProx / c.ticket) : 0)) : 0;
   const maxAlvo = Math.max(100, ...c.faixas.map(f => f.alvo)) * 1.08;
   return `
-  <div class="page-h"><h2>Painel do vendedor</h2><p>O que cada um vê no próprio celular</p></div>
+  ${self ? `<div class="page-h"><h2>Olá, ${esc(first(v.nome))}</h2><p>Seus ganhos só você e o gestor veem</p></div>` : `<div class="page-h"><h2>Equipe</h2><p>Toque em um vendedor para ver o painel dele</p></div>`}
   <div class="wrap">
-    <div class="chips">${DATA.vendedores.map(x => `<button class="chip ${x.id === v.id ? 'on' : ''}" data-act="ver-vend" data-id="${x.id}">${av(x)}${esc(first(x.nome))}</button>`).join('')}</div>
+    ${self ? '' : `<div class="chips">${DATA.vendedores.map(x => `<button class="chip ${x.id === v.id ? 'on' : ''}" data-act="ver-vend" data-id="${x.id}">${av(x)}${esc(first(x.nome))}</button>`).join('')}</div>`}
     <div class="me">
       <div class="top">${av(v)}<div><h3>${esc(v.nome)}</h3><small>${esc(monthLabel(m))}</small></div><div class="rank"><b class="num">${pos}º</b><small>no ranking</small></div></div>
       <div class="earn"><div><small>Já garantiu este mês</small><b class="num">${brl(c.total)}</b></div></div>
@@ -593,22 +615,49 @@ function vAjustes() {
 }
 
 /* ======================= casca ======================= */
-const VIEWS = { placar: vPlacar, vendedor: vVendedor, relatorio: vRelatorio, ajustes: vAjustes };
+const VIEWS = { placar: vPlacar, vendedor: () => vVendedor(false), meu: vMeu, relatorio: vRelatorio, ajustes: vAjustes };
 function renderShell() {
+  const tabs = isGestor()
+    ? [['placar', 'Placar', 'trophy'], ['vendedor', 'Equipe', 'user'], ['relatorio', 'Fechamento', 'doc'], ['ajustes', 'Ajustes', 'gear']]
+    : [['meu', 'Meu placar', 'user'], ['placar', 'Ranking', 'trophy']];
+  const me = vend(ui.me);
   $('#root').innerHTML = `
-  <div class="demo-strip">Demonstração feita por <a href="https://0metatron.github.io/App-s/" target="_blank" rel="noopener">Cesar</a> · os dados de exemplo são fictícios</div>
+  <div class="demo-strip">Demonstração feita por <a href="https://0metatron.github.io/App-s/" target="_blank" rel="noopener">Cesar</a> · vendo como <b>${isGestor() ? 'gestor' : 'vendedor (' + esc(first(me?.nome)) + ')'}</b> · <a href="#" data-act="trocar">trocar</a></div>
   <div class="app">
     <header class="topbar">
       <div class="logo">${ic('trophy')}</div>
-      <div class="tb-txt"><h1 id="tb-name">${esc(cfg().empresa)}</h1><small>Placar de Vendas</small></div>
-      <button class="tbtn" data-act="tv">${ic('tv')} Telão</button>
+      <div class="tb-txt"><h1 id="tb-name">${esc(cfg().empresa)}</h1><small>${isGestor() ? 'Área do gestor' : 'Área do vendedor'}</small></div>
+      ${isGestor() ? `<button class="tbtn" data-act="tv">${ic('tv')} Telão</button>` : `<button class="rolebadge" data-act="trocar">Trocar perfil</button>`}
     </header>
     <main id="main"></main>
   </div>
-  <nav class="nav"><div class="nav-in">
-    ${[['placar', 'Placar', 'trophy'], ['vendedor', 'Vendedor', 'user'], ['relatorio', 'Fechamento', 'doc'], ['ajustes', 'Ajustes', 'gear']].map(([k, l, i]) => `<button data-act="nav" data-v="${k}" class="${view === k ? 'on' : ''}">${ic(i)}${l}</button>`).join('')}
+  <nav class="nav"><div class="nav-in" style="grid-template-columns:repeat(${tabs.length},1fr)">
+    ${tabs.map(([k, l, i]) => `<button data-act="nav" data-v="${k}" class="${view === k ? 'on' : ''}">${ic(i)}${l}</button>`).join('')}
   </div></nav>
   <button class="fab" data-act="nova">${ic('plus')} Lançar venda</button>`;
+}
+function renderChooser() {
+  closeSheet(); closeTv();
+  $('#root').innerHTML = `
+  <div class="chooser"><div class="in">
+    <div class="logo">${ic('trophy')}</div>
+    <h1>Placar de Vendas</h1>
+    <p class="sub">Um link só para a equipe toda. Cada pessoa entra com o próprio login e vê só o que é dela.</p>
+    <div class="q">Como quer ver a demonstração?</div>
+    <button class="role-card" data-act="role" data-v="gestor"><div class="ic" style="background:#FFD66B;color:#3B2A00">${ic('chart')}</div><div><b>Sou gestor</b><span>Vejo a equipe toda em tempo real: ranking, metas, quanto pagar no fechamento e as regras de comissão.</span></div></button>
+    <button class="role-card ${ui.pickMe ? 'on' : ''}" data-act="role" data-v="vendedor"><div class="ic" style="background:#3B6BFF;color:#fff">${ic('user')}</div><div><b>Sou vendedor</b><span>Lanço minhas vendas na hora e acompanho minha comissão, meta e posição no ranking.</span></div></button>
+    ${ui.pickMe ? `<div class="q" style="margin-top:14px">Qual vendedor você é?</div><div class="me-pick">${DATA.vendedores.map(v => `<button data-act="pick-me" data-id="${v.id}">${av(v)}${esc(first(v.nome))}</button>`).join('')}</div>` : ''}
+    <div class="how"><b>Como funciona na equipe de verdade</b><ol>
+      <li>O gestor cadastra os vendedores e as regras de comissão.</li>
+      <li>Cada vendedor recebe o link, instala no celular e entra com o login dele.</li>
+      <li>O vendedor lança a venda na rua e ela aparece na hora no placar do gestor.</li>
+      <li>No fim do mês o gestor abre o Fechamento e já sabe quanto pagar para cada um.</li>
+    </ol></div>
+  </div></div>`;
+}
+function start() {
+  if (ui.role === 'gestor' || (ui.role === 'vendedor' && vend(ui.me))) { view = isGestor() ? 'placar' : 'meu'; renderShell(); render(); }
+  else { ui.role = null; renderChooser(); }
 }
 function render(keep) {
   const y = window.scrollY;
@@ -626,12 +675,12 @@ const shHead = (t, sub = '') => `<div class="sh-h"><div style="flex:1"><h3>${t}<
 
 function openNova() {
   if (!DATA.vendedores.length) { toast('Cadastre um vendedor em Ajustes primeiro'); view = 'ajustes'; render(); return; }
-  const sel = vend(ui.lastVend) ? ui.lastVend : (view === 'vendedor' && vend(ui.vend) ? ui.vend : DATA.vendedores[0].id);
+  const sel = !isGestor() ? ui.me : vend(ui.lastVend) ? ui.lastVend : (view === 'vendedor' && vend(ui.vend) ? ui.vend : DATA.vendedores[0].id);
   openSheet(`
-    ${shHead('Lançar venda', 'Leva 5 segundos. O placar atualiza na hora.')}
+    ${shHead('Lançar venda', isGestor() ? 'Leva 5 segundos. O placar atualiza na hora.' : 'Lançando como ' + esc(vend(sel)?.nome || '') + '. Aparece na hora para o gestor.')}
     <form id="f-venda" class="f" autocomplete="off">
       <input type="hidden" name="vid" value="${sel}">
-      <div class="fld"><label>Quem vendeu</label><div class="pick">${DATA.vendedores.map(v => `<button type="button" class="${v.id === sel ? 'on' : ''}" data-act="pick-vend" data-id="${v.id}">${av(v)}${esc(first(v.nome))}</button>`).join('')}</div></div>
+      ${!isGestor() ? '' : `<div class="fld"><label>Quem vendeu</label><div class="pick">${DATA.vendedores.map(v => `<button type="button" class="${v.id === sel ? 'on' : ''}" data-act="pick-vend" data-id="${v.id}">${av(v)}${esc(first(v.nome))}</button>`).join('')}</div><div class="hint">O gestor também pode lançar ou corrigir venda de qualquer um.</div></div>`}
       <div class="fld"><label>Valor da venda</label><input class="big-input num" name="valor" inputmode="decimal" placeholder="R$ 0,00" required></div>
       <div class="row2">
         <div class="fld"><label>Data</label><input type="date" name="data" value="${today()}" max="${today()}" required></div>
@@ -667,7 +716,7 @@ async function saveVenda(f) {
   render(true);
   if (hit) toast(`🏆 ${first(v.nome)} bateu ${hit.alvo}% da meta e liberou o bônus de ${brl0(hit.premio)}!`, 'win');
   else if (posAfter > -1 && posAfter < posBefore) toast(`🚀 ${first(v.nome)} subiu para ${posAfter + 1}º lugar no mês!`, 'win');
-  else toast(`Venda de ${brl0(valor)} lançada para ${first(v.nome)} · +${brl(after.com - before.com)}`);
+  else toast(isGestor() ? `Venda de ${brl0(valor)} lançada para ${first(v.nome)} · +${brl(after.com - before.com)}` : `Venda lançada! +${brl(after.com - before.com)} de comissão para você`);
 }
 
 /* importar da planilha */
@@ -756,13 +805,22 @@ function readCfgForm() {
   c.faixas = c.faixas.map((_, i) => ({ alvo: num(fd.get('f_alvo_' + i)), premio: parseMoney(fd.get('f_premio_' + i)) })).filter(x => x.alvo > 0);
 }
 document.addEventListener('click', async e => {
-  if (e.target.closest('a[href]')) return;
-  const el = e.target.closest('[data-act]'); if (!el) return;
+  const el = e.target.closest('[data-act]');
+  if (e.target.closest('a[href]') && !(el && el.matches('a[data-act]'))) return;
+  if (!el) return;
   const a = el.dataset.act, id = el.dataset.id, v = el.dataset.v;
   switch (a) {
     case 'nav': view = v; render(); break;
     case 'periodo': ui.periodo = v; render(true); break;
-    case 'ver-vend': ui.vend = id; if (view !== 'vendedor') { view = 'vendedor'; render(); } else render(true); break;
+    case 'ver-vend':
+      if (!isGestor()) { if (id === ui.me) { view = 'meu'; render(); } else toast('Os ganhos de cada vendedor só o gestor vê'); break; }
+      ui.vend = id; if (view !== 'vendedor') { view = 'vendedor'; render(); } else render(true); break;
+    case 'role':
+      if (v === 'gestor') { ui.role = 'gestor'; LS.set('placar_role', 'gestor'); ui.pickMe = false; start(); }
+      else { ui.pickMe = true; renderChooser(); }
+      break;
+    case 'pick-me': ui.role = 'vendedor'; ui.me = id; LS.set('placar_role', 'vendedor'); LS.set('placar_me', id); ui.pickMe = false; start(); break;
+    case 'trocar': e.preventDefault(); ui.role = null; LS.del('placar_role'); ui.pickMe = false; renderChooser(); break;
     case 'nova': openNova(); break;
     case 'pick-vend': { const f = $('#f-venda'); f.vid.value = id; f.querySelectorAll('.pick button').forEach(b => b.classList.toggle('on', b.dataset.id === id)); previewVenda(); break; }
     case 'close-sheet': closeSheet(); break;
@@ -782,7 +840,7 @@ document.addEventListener('click', async e => {
     case 'del-vend': { if (!arm(el, '?')) break; const n = DATA.vendas.filter(s => s.vid === id).length; DATA.vendedores = DATA.vendedores.filter(x => x.id !== id); DATA.vendas = DATA.vendas.filter(s => s.vid !== id); save(); render(true); toast(`Vendedor removido${n ? ` com ${n} vendas` : ''}`); break; }
     case 'import': importRows = []; openImport(); break;
     case 'do-import': doImport(); break;
-    case 'reset': if (!arm(el, 'Toque de novo para confirmar')) break; DATA = seed(); save(); view = 'placar'; renderShell(); render(); toast('Dados de exemplo restaurados'); break;
+    case 'reset': if (!arm(el, 'Toque de novo para confirmar')) break; DATA = seed(); save(); start(); toast('Dados de exemplo restaurados'); break;
     case 'zerar': if (!arm(el, 'Toque de novo: apaga todas as vendas')) break; DATA.vendas = []; DATA.vendedores = []; save(); render(true); toast('Tudo apagado. Cadastre sua equipe.'); break;
   }
 });
@@ -838,8 +896,8 @@ function seed() {
   };
 }
 
-load(); renderShell(); render();
-setInterval(() => { if ($('#sheet').hidden && $('#tv').hidden && view === 'placar') render(true); }, 60000);
+load(); start();
+setInterval(() => { if ($('#main') && $('#sheet').hidden && $('#tv').hidden && (view === 'placar' || view === 'meu')) render(true); }, 60000);
 </script>
 </body>
 </html>
