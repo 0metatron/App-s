@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Agenda do Psicólogo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: coluna única (celular primeiro) com duas visões alternadas: paciente agenda em 4 passos; psicólogo vê agenda, confirmações e lembretes. Tema claro único, calmo. */
+:root{
+  --papel:#f6f4ef;
+  --cartao:#ffffff;
+  --tinta:#1f2a2e;
+  --cinza:#66737a;
+  --linha:#e2ded5;
+  --salvia:#4f7d6b;
+  --salvia-claro:#e5efe9;
+  --areia:#c98b4f;
+  --f-disp:'Fraunces',Georgia,serif;
+  --f-body:'Figtree','Segoe UI',system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--papel);color:var(--tinta);font-family:var(--f-body);font-size:15px;line-height:1.5}
+body{padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--salvia);outline-offset:2px}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px 40px}
+.demo{font-size:12px;background:#efe7da;color:#6b4d2a;text-align:center;padding:6px 10px}
+.demo a{color:inherit}
+.vis{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#ebe7de;border-radius:12px;padding:4px;margin:14px 0}
+.vis button{border:0;background:none;border-radius:9px;padding:9px;font-weight:600;color:var(--cinza)}
+.vis button[aria-pressed="true"]{background:var(--cartao);color:var(--tinta);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.perfil{display:flex;gap:14px;align-items:center;padding:6px 0 14px}
+.foto{width:58px;height:58px;border-radius:50%;background:var(--salvia-claro);color:var(--salvia);display:grid;place-items:center;font-family:var(--f-disp);font-size:24px;flex:none}
+.perfil h1{font-family:var(--f-disp);font-weight:600;font-size:24px;margin:0;line-height:1.1}
+.perfil p{margin:3px 0 0;color:var(--cinza);font-size:13px}
+.perfil .crp{display:inline-block;margin-top:5px;font-size:12px;font-weight:600;color:var(--salvia);background:var(--salvia-claro);border-radius:999px;padding:2px 9px}
+.card{background:var(--cartao);border:1px solid var(--linha);border-radius:16px;padding:16px;margin-bottom:12px}
+.passo{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.passo span{width:24px;height:24px;border-radius:50%;background:var(--salvia);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center;flex:none}
+.passo span.vz{background:var(--linha);color:var(--cinza)}
+.passo h2{font-family:var(--f-disp);font-weight:500;font-size:18px;margin:0}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt{border:1.5px solid var(--linha);background:var(--cartao);border-radius:12px;padding:12px;text-align:left}
+.opt b{display:block;font-size:15px}
+.opt small{color:var(--cinza);font-size:12px}
+.opt[aria-pressed="true"]{border-color:var(--salvia);background:var(--salvia-claro)}
+.dias{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin:0 -16px;padding-left:16px;padding-right:16px;scrollbar-width:none}
+.dias::-webkit-scrollbar{display:none}
+.dia{flex:none;width:58px;border:1.5px solid var(--linha);background:var(--cartao);border-radius:12px;padding:8px 0;text-align:center}
+.dia small{display:block;font-size:11px;color:var(--cinza);text-transform:uppercase}
+.dia b{font-size:18px}
+.dia[aria-pressed="true"]{border-color:var(--salvia);background:var(--salvia);color:#fff}
+.dia[aria-pressed="true"] small{color:#e5efe9}
+.horas{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.hora{border:1.5px solid var(--linha);background:var(--cartao);border-radius:10px;padding:8px 0;font-weight:600;font-variant-numeric:tabular-nums}
+.hora:disabled{opacity:.35;text-decoration:line-through;cursor:not-allowed}
+.hora[aria-pressed="true"]{border-color:var(--salvia);background:var(--salvia);color:#fff}
+.fld{display:grid;gap:4px;margin-bottom:10px}
+.fld label{font-size:13px;color:var(--cinza)}
+.inp{width:100%;border:1.5px solid var(--linha);border-radius:10px;padding:11px 12px;background:var(--cartao)}
+.inp:focus{border-color:var(--salvia);outline:none}
+.ck{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--cinza)}
+.ck input{margin-top:3px;accent-color:var(--salvia);width:18px;height:18px;flex:none}
+.aviso{font-size:12.5px;color:#6b4d2a;background:#f6eee2;border-radius:10px;padding:9px 11px;margin:4px 0 10px}
+.btn{width:100%;border:0;border-radius:12px;padding:14px;font-weight:700;background:var(--salvia);color:#fff;font-size:15px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sec{background:var(--salvia-claro);color:var(--salvia);margin-top:8px;display:block;text-align:center;text-decoration:none}
+.err{color:#b4462b;font-size:12.5px;min-height:16px;margin:6px 0 0}
+.ok{text-align:center}
+.ok .sel{width:60px;height:60px;border-radius:50%;background:var(--salvia);color:#fff;display:grid;place-items:center;margin:4px auto 10px;font-size:28px}
+.ok h2{font-family:var(--f-disp);font-weight:600;font-size:22px;margin:0 0 6px}
+.res{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;text-align:left;background:var(--papel);border-radius:12px;padding:12px;margin:12px 0;font-size:14px}
+.res dt{color:var(--cinza)}.res dd{margin:0;font-weight:600}
+.nota{font-size:12px;color:var(--cinza);text-align:center;margin-top:16px}
+/* visão do psicólogo */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.kpis div{background:var(--cartao);border:1px solid var(--linha);border-radius:14px;padding:10px;text-align:center}
+.kpis b{display:block;font-family:var(--f-disp);font-size:24px;font-weight:600}
+.kpis small{font-size:11px;color:var(--cinza)}
+.ag h3{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--cinza);margin:14px 0 6px}
+.ag h3:first-of-type{margin-top:0}
+.sess{display:grid;grid-template-columns:54px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--linha)}
+.sess:first-of-type{border-top:0}
+.sess time{font-weight:700;font-variant-numeric:tabular-nums}
+.sess b{display:block;font-size:14.5px}
+.sess small{color:var(--cinza);font-size:12px}
+.st{font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;white-space:nowrap}
+.st.c{background:var(--salvia-claro);color:var(--salvia)}
+.st.a{background:#f6eee2;color:#9a6a33}
+.st.r{background:#f7e3dd;color:#b4462b}
+.st.n{background:#e3ecf7;color:#2f5f93}
+.zap{background:#e9f5ee;border-radius:12px;padding:10px 12px;font-size:13.5px;margin:8px 0}
+.zap small{display:block;color:var(--cinza);font-size:11.5px;margin-bottom:3px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="demo">Demonstração feita por <a href="index.html">Cesar</a> · os dados de exemplo são fictícios</div>
+<div class="wrap">
+  <div class="vis" role="group" aria-label="Escolher visão"><button id="v-pac" aria-pressed="true">Visão do paciente</button><button id="v-psi" aria-pressed="false">Visão do psicólogo</button></div>
+  <div id="tela"></div>
+  <p class="nota">Sem preços e sem promessa de resultado, como pede o Código de Ética do psicólogo. O agendamento pede só os dados necessários, nada sobre o motivo da consulta.</p>
+</div>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DS=['dom','seg','ter','qua','qui','sex','sáb'],MS=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+const HORAS=['08:00','09:00','10:00','11:00','14:00','15:00','16:00','17:00'];
+const hojeD=new Date();hojeD.setHours(0,0,0,0);
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const DIAS=[];{const d=new Date(hojeD);while(DIAS.length<10){d.setDate(d.getDate()+1);if(d.getDay()!==0&&d.getDay()!==6)DIAS.push(new Date(d))}}
+function ocupado(dia,h){const s=dia+h;let x=0;for(const c of s)x=(x*31+c.charCodeAt(0))%997;return x%3===0}
+const fmt=d=>DS[d.getDay()]+', '+d.getDate()+' '+MS[d.getMonth()];
+/* agenda de exemplo (iniciais, por privacidade) */
+const AG=[];
+[['M. S.','Presencial','c'],['J. R.','Online','c'],['A. P.','Presencial','a'],['L. C.','Online','r'],['R. M.','Presencial','c'],['T. B.','Online','a']].forEach((p,i)=>{const d=DIAS[i<3?0:1],h=HORAS[[1,4,6,0,2,5][i]];AG.push({d:iso(d),h,n:p[0],m:p[1],st:p[2],tipo:i===2?'Primeira consulta':'Retorno'})});
+let V='pac',S={mod:null,tipo:null,dia:null,hora:null,nome:'',zap:'',conv:'Particular',lgpd:false,feito:false};
+function passo(n,ok,t){return`<div class="passo"><span class="${ok?'':'vz'}">${ok?'✓':n}</span><h2>${t}</h2></div>`}
+function vPac(){if(S.feito)return vOk();const d=S.dia;
+  return`<div class="perfil"><div class="foto" aria-hidden="true">I</div><div><h1>Ian · Psicólogo</h1><p>Psicólogo hospitalar e clínico · atendimento presencial em Macapá e online</p><span class="crp">CRP 00/00000</span></div></div>
+  <div class="card">${passo(1,S.mod,'Como prefere ser atendido?')}<div class="opts">${[['pres','Presencial','No consultório, em Macapá'],['onl','Online','Por videochamada']].map(([k,t,s])=>`<button class="opt" data-mod="${k}" aria-pressed="${S.mod===k}"><b>${t}</b><small>${s}</small></button>`).join('')}</div></div>
+  <div class="card">${passo(2,S.tipo,'É a primeira vez?')}<div class="opts">${[['pri','Primeira consulta','Ainda não fiz sessão'],['ret','Retorno','Já sou paciente']].map(([k,t,s])=>`<button class="opt" data-tipo="${k}" aria-pressed="${S.tipo===k}"><b>${t}</b><small>${s}</small></button>`).join('')}</div></div>
+  <div class="card">${passo(3,S.hora,'Escolha dia e horário')}<div class="dias">${DIAS.map(x=>`<button class="dia" data-dia="${iso(x)}" aria-pressed="${d===iso(x)}"><small>${DS[x.getDay()]}</small><b>${x.getDate()}</b><small>${MS[x.getMonth()]}</small></button>`).join('')}</div>
+   ${d?`<div class="horas">${HORAS.map(h=>{const oc=ocupado(d,h)||AG.some(a=>a.d===d&&a.h===h);return`<button class="hora" data-hora="${h}" ${oc?'disabled aria-label="'+h+' ocupado"':''} aria-pressed="${S.hora===h}">${h}</button>`}).join('')}</div>`:'<p style="margin:8px 0 0;color:var(--cinza);font-size:13px">Toque num dia para ver os horários livres.</p>'}</div>
+  <div class="card">${passo(4,S.nome&&S.zap&&S.lgpd,'Seus dados')}
+   <div class="fld"><label for="f-nome">Nome completo</label><input class="inp" id="f-nome" maxlength="60" value="${esc(S.nome)}" autocomplete="name"></div>
+   <div class="fld"><label for="f-zap">WhatsApp</label><input class="inp" id="f-zap" inputmode="tel" maxlength="20" placeholder="(96) 9 0000-0000" value="${esc(S.zap)}" autocomplete="tel"></div>
+   <div class="fld"><label for="f-conv">Forma de atendimento</label><select class="inp" id="f-conv">${['Particular','Convênio','Ainda não sei'].map(o=>`<option ${S.conv===o?'selected':''}>${o}</option>`).join('')}</select></div>
+   <p class="aviso">Não precisa contar aqui o motivo da consulta. Isso fica para a sessão, com sigilo.</p>
+   <label class="ck"><input type="checkbox" id="f-lgpd" ${S.lgpd?'checked':''}> Autorizo o uso destes dados apenas para agendamento e lembretes da consulta.</label>
+   <p class="err" id="err"></p>
+   <button class="btn" id="agendar">Agendar consulta</button></div>`}
+function vOk(){const d=new Date(S.dia+'T00:00');
+  return`<div class="card ok"><div class="sel" aria-hidden="true">✓</div><h2>Consulta agendada</h2><p style="margin:0;color:var(--cinza)">O Ian recebe o aviso na hora e você recebe um lembrete no WhatsApp um dia antes.</p>
+  <dl class="res"><dt>Quando</dt><dd>${fmt(d)}, às ${S.hora}</dd><dt>Como</dt><dd>${S.mod==='pres'?'Presencial, em Macapá':'Online, por videochamada'}</dd><dt>Tipo</dt><dd>${S.tipo==='pri'?'Primeira consulta':'Retorno'}</dd><dt>Paciente</dt><dd>${esc(S.nome)}</dd></dl>
+  <div class="zap"><small>Lembrete que chega no WhatsApp um dia antes</small>Olá, ${esc(S.nome.split(' ')[0])}! Lembrando da sua sessão amanhã às ${S.hora}${S.mod==='onl'?' (online, o link chega 15 min antes)':''}. Responda <b>1</b> para confirmar ou <b>2</b> para remarcar.</div>
+  <button class="btn sec" id="ver-psi">Ver como chega pro psicólogo</button><button class="btn sec" id="novo">Fazer outro agendamento</button></div>`}
+function vPsi(){const hoje=iso(DIAS[0]),amanha=iso(DIAS[1]);const lista=AG.slice().sort((a,b)=>(a.d+a.h).localeCompare(b.d+b.h));
+  const conf=AG.filter(a=>a.st==='c').length,tot=AG.length;
+  const grupo=(dia,t)=>{const L=lista.filter(a=>a.d===dia);return L.length?`<h3>${t}</h3>`+L.map(a=>`<div class="sess"><time>${a.h}</time><div><b>${esc(a.n)}</b><small>${a.m} · ${a.tipo}</small></div><span class="st ${a.st}">${{c:'Confirmou',a:'Aguardando',r:'Pediu pra remarcar',n:'Novo agendamento'}[a.st]}</span></div>`).join(''):''};
+  const outros=[...new Set(lista.map(a=>a.d))].filter(d=>d!==hoje&&d!==amanha);
+  return`<div class="kpis"><div><b>${tot}</b><small>sessões na agenda</small></div><div><b>${Math.round(conf/tot*100)}%</b><small>já confirmaram</small></div><div><b>${AG.filter(a=>a.st==='r').length}</b><small>pedem remarcação</small></div></div>
+  <div class="card ag">${grupo(hoje,'Próximo dia útil · '+fmt(DIAS[0]))}${grupo(amanha,fmt(DIAS[1]))}${outros.map(d=>grupo(d,fmt(new Date(d+'T00:00')))).join('')}</div>
+  <div class="card"><div class="passo"><span>⏰</span><h2>Lembretes automáticos</h2></div>
+   <p style="margin:0 0 6px;color:var(--cinza);font-size:13.5px">Um dia antes, cada paciente recebe a mensagem e responde 1 ou 2. A agenda atualiza sozinha e quem pede remarcação aparece em vermelho pra você reorganizar.</p>
+   <div class="zap"><small>Exemplo de lembrete</small>Olá! Lembrando da sua sessão amanhã às 15:00. Responda <b>1</b> para confirmar ou <b>2</b> para remarcar.</div>
+   <p style="margin:6px 0 0;color:var(--cinza);font-size:13px">Na agenda aparecem só as iniciais e nada sobre o conteúdo das sessões. Prontuário continua onde já é guardado hoje.</p></div>`}
+function render(){$('v-pac').setAttribute('aria-pressed',V==='pac');$('v-psi').setAttribute('aria-pressed',V==='psi');$('tela').innerHTML=V==='pac'?vPac():vPsi()}
+function ler(){const n=$('f-nome'),z=$('f-zap'),c=$('f-conv'),l=$('f-lgpd');if(n)S.nome=n.value;if(z)S.zap=z.value;if(c)S.conv=c.value;if(l)S.lgpd=l.checked}
+document.addEventListener('click',e=>{const t=e.target;
+  if(t.closest('#v-pac')){V='pac';render();return}
+  if(t.closest('#v-psi')||t.closest('#ver-psi')){ler();V='psi';render();window.scrollTo(0,0);return}
+  if(t.closest('#novo')){S={mod:null,tipo:null,dia:null,hora:null,nome:'',zap:'',conv:'Particular',lgpd:false,feito:false};render();window.scrollTo(0,0);return}
+  const b=t.closest('[data-mod],[data-tipo],[data-dia],[data-hora]');
+  if(b){ler();if(b.dataset.mod)S.mod=b.dataset.mod;if(b.dataset.tipo)S.tipo=b.dataset.tipo;if(b.dataset.dia){S.dia=b.dataset.dia;S.hora=null}if(b.dataset.hora)S.hora=b.dataset.hora;const y=window.scrollY;render();window.scrollTo(0,y);return}
+  if(t.closest('#agendar')){ler();const f=!S.mod?'Escolha presencial ou online.':!S.tipo?'Diga se é a primeira consulta ou retorno.':!S.hora?'Escolha um dia e um horário.':S.nome.trim().length<3?'Escreva seu nome completo.':S.zap.replace(/\D/g,'').length<10?'Confira o número do WhatsApp com DDD.':!S.lgpd?'Marque a autorização para podermos te lembrar da consulta.':'';
+    if(f){$('err').textContent=f;return}
+    const ini=S.nome.trim().split(/\s+/).map(p=>p[0].toUpperCase()+'.').slice(0,2).join(' ');
+    AG.push({d:S.dia,h:S.hora,n:ini,m:S.mod==='pres'?'Presencial':'Online',st:'n',tipo:S.tipo==='pri'?'Primeira consulta':'Retorno'});S.feito=true;render();window.scrollTo(0,0)}});
+render();
+})();
+</script>
+</body>
+</html>
