@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Robô da Max Imports Amapá</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
+<style>
+/* Layout: conversa de chat em tela cheia (celular primeiro), faixa de demonstração no topo, cartão do cliente pronto pro vendedor no fim. Tema único. */
+:root{
+  --fundo:#e9ece8;
+  --topo:#0b0f0c;
+  --verde:#22c55e;
+  --verde-esc:#15803d;
+  --eu:#dcfce7;
+  --bot:#ffffff;
+  --tinta:#111b21;
+  --apagado:#667781;
+  --f:'Figtree','Segoe UI',system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:var(--f);background:#0b0f0c;color:var(--tinta);display:flex;justify-content:center}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--verde);outline-offset:2px}
+.app{width:100%;max-width:480px;height:100%;display:flex;flex-direction:column;background:var(--fundo)}
+.demo{background:var(--verde);color:#052e16;font-size:12px;font-weight:600;padding:6px 12px;padding-top:calc(6px + env(safe-area-inset-top));display:flex;gap:8px;align-items:center;justify-content:space-between}
+.demo a{color:inherit}
+.demo button{background:rgba(0,0,0,.14);border:0;border-radius:999px;padding:4px 10px;font-weight:700;font-size:12px;white-space:nowrap}
+.hd{background:var(--topo);color:#fff;display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:2px solid var(--verde)}
+.av{width:40px;height:40px;border-radius:50%;background:#111;border:2px solid var(--verde);display:grid;place-items:center;font-weight:800;font-size:14px;color:var(--verde);flex:none}
+.hd b{display:block;font-size:16px}
+.hd small{font-size:12px;opacity:.8}
+.msgs{flex:1;overflow-y:auto;padding:12px 10px 6px;display:flex;flex-direction:column;gap:6px;background-image:radial-gradient(rgba(0,0,0,.04) 1px,transparent 1px);background-size:14px 14px}
+.dia{align-self:center;background:#fff;color:var(--apagado);font-size:11px;font-weight:600;border-radius:8px;padding:4px 10px;margin:4px 0}
+.b{max-width:86%;min-width:76px;padding:7px 10px 18px;border-radius:10px;font-size:14.5px;line-height:1.4;position:relative;box-shadow:0 1px 1px rgba(0,0,0,.08);white-space:pre-line;animation:in .18s ease-out}
+.b.bot{align-self:flex-start;background:var(--bot);border-top-left-radius:2px}
+.b.eu{align-self:flex-end;background:var(--eu);border-top-right-radius:2px}
+.b time{position:absolute;right:8px;bottom:3px;font-size:10px;color:var(--apagado)}
+.b.eu time::after{content:" ✓✓";color:#53bdeb}
+.card{margin-top:6px;border:1px solid #e3e8e4;border-radius:8px;overflow:hidden;white-space:normal}
+.card div{display:flex;justify-content:space-between;gap:10px;padding:7px 9px;border-top:1px solid #eef2ef;font-size:13.5px}
+.card div:first-child{border-top:0}
+.card i{font-style:normal;color:var(--apagado)}
+.card b{white-space:nowrap}
+.mod{display:block!important;padding:9px!important}
+.mod b{display:block;font-size:14.5px}
+.mod i{display:block;font-size:12.5px;margin-top:2px}
+.tag{display:inline-block;background:#dcfce7;color:var(--verde-esc);font-size:11px;font-weight:700;border-radius:999px;padding:2px 7px;margin-top:5px}
+.digitando{align-self:flex-start;background:#fff;border-radius:10px;padding:10px 12px;display:flex;gap:4px}
+.digitando i{width:7px;height:7px;border-radius:50%;background:#9aa6ac;animation:pulo 1s infinite}
+.digitando i:nth-child(2){animation-delay:.15s}.digitando i:nth-child(3){animation-delay:.3s}
+@keyframes pulo{0%,60%,100%{transform:none;opacity:.6}30%{transform:translateY(-4px);opacity:1}}
+@keyframes in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.ops{display:flex;flex-wrap:wrap;gap:6px;padding:6px 10px 4px;justify-content:flex-end}
+.ops button{background:#fff;border:1px solid #c9d3cc;color:var(--verde-esc);font-weight:700;font-size:13.5px;border-radius:999px;padding:8px 13px}
+.ops button:active{transform:scale(.97)}
+.bar{display:flex;gap:8px;padding:8px 10px;padding-bottom:calc(8px + env(safe-area-inset-bottom));background:#f0f2f0}
+.bar input{flex:1;border:0;border-radius:22px;padding:11px 14px;background:#fff;min-width:0;font-size:15px}
+.bar input:focus{outline:2px solid var(--verde)}
+.bar button{width:44px;height:44px;border-radius:50%;border:0;background:var(--verde-esc);color:#fff;display:grid;place-items:center;flex:none}
+.bar svg{width:20px;height:20px}
+.dono{margin:8px 0 4px;align-self:stretch;background:#fff;border-radius:12px;border:2px dashed var(--verde-esc);padding:12px;font-size:13.5px;animation:in .25s ease-out}
+.dono h3{margin:0 0 6px;font-size:14px;color:var(--verde-esc)}
+.dono p{margin:8px 0 0;color:var(--apagado);font-size:12.5px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<main class="app">
+  <div class="demo"><span>Demonstração · robô de vendas feito por <a href="index.html">Cesar</a></span><button id="reset">Recomeçar</button></div>
+  <header class="hd"><div class="av" aria-hidden="true">MAX</div><div><b>Max Imports Amapá</b><small id="status">online · atendente virtual</small></div></header>
+  <section class="msgs" id="msgs" aria-live="polite"></section>
+  <div class="ops" id="ops"></div>
+  <form class="bar" id="form" autocomplete="off"><input id="txt" placeholder="Escreva uma mensagem" aria-label="Escreva uma mensagem"><button aria-label="Enviar"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.4 20.4l17.5-7.5c.8-.4.8-1.5 0-1.8L3.4 3.6c-.7-.3-1.4.3-1.3 1l1 6.2c.1.5.5.9 1 .9l8.4.8-8.4.8c-.5.1-.9.4-1 .9l-1 6.2c-.1.7.6 1.3 1.3 1z"/></svg></button></form>
+</main>
+<script>
+(function(){
+"use strict";
+const MOD={
+  s11:{n:'Série 11 · 46 mm',d:'O lançamento, com sistema OS11. Responde o WhatsApp por voz, faz e recebe ligações, foto no fundo de tela e mais de 50 funções.',p:'Pulso médio ou grande',c:['Preto','Prata','Rose Gold'],s11:1},
+  mini:{n:'Série 11 Mini',d:'O mais escolhido pelas mulheres: as funções da Série 11 num tamanho mais delicado.',p:'Pulso fino',c:['Rose Gold','Preto','Prata'],s11:1},
+  ultra:{n:'Ultra Max · 49 mm',d:'Caixa grande e robusta estilo Ultra, sistema OS11. Ótimo pra treino e uso pesado.',p:'Pulso médio a largo',c:['Preto','Titânio'],s11:1},
+  ultraf:{n:'Ultra 11 Feminino · 49 mm',d:'O visual Ultra com pulseiras e mostradores pensados pro público feminino.',p:'Pulso médio',c:['Prata','Preto'],s11:1},
+  mrex:{n:'Smartwatch M Rex',d:'Visual redondo e esportivo, sistema OS11. Pra quem prefere cara de relógio tradicional.',p:'Pulso médio a largo',c:['Preto','Verde militar','Prata']}};
+const BRINDE='Na Black, quem leva um <b>Série 11</b> ganha <b>2 pulseiras extras</b>, <b>capa</b>, <b>limpador de tela</b> e <b>película grátis por 1 ano</b> 🎁';
+const $=id=>document.getElementById(id);
+const M=$('msgs'),OPS=$('ops');
+const hora=()=>new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let C,etapa,fila=Promise.resolve();
+function rolar(){M.scrollTop=M.scrollHeight}
+function eu(t){const d=document.createElement('div');d.className='b eu';d.innerHTML=esc(t)+'<time>'+hora()+'</time>';M.appendChild(d);rolar()}
+function bot(html,ms){fila=fila.then(()=>new Promise(r=>{const t=document.createElement('div');t.className='digitando';t.innerHTML='<i></i><i></i><i></i>';M.appendChild(t);rolar();$('status').textContent='digitando…';
+  setTimeout(()=>{t.remove();const d=document.createElement('div');d.className='b bot';d.innerHTML=html+'<time>'+hora()+'</time>';M.appendChild(d);rolar();$('status').textContent='online · atendente virtual';r()},ms||Math.min(1400,500+html.length*5))}));return fila}
+function bloco(html){fila=fila.then(()=>{const d=document.createElement('div');d.className='dono';d.innerHTML=html;M.appendChild(d);rolar()})}
+function ops(L){OPS.innerHTML='';fila.then(()=>{OPS.innerHTML=L.map(([k,t])=>`<button type="button" data-k="${k}">${t}</button>`).join('');rolar()})}
+function novo(){C={uso:null,pulso:null,estilo:null,mod:null,cor:null,nome:'',local:null,pag:null}}
+function menu(){etapa='menu';ops([['modelos','⌚ Ver modelos'],['ajuda','🤔 Me ajuda a escolher'],['black','🎁 Promoção Black'],['vendedor','🙋 Falar com vendedor']])}
+function inicio(){M.innerHTML='<div class="dia">HOJE</div>';OPS.innerHTML='';fila=Promise.resolve();novo();
+  bot('Oi! 👋 Bem-vindo à <b>Max Imports Amapá</b>, a sua loja nº 1 em smartwatches do Amapá 💚\nSou o atendente virtual e te respondo na hora. Como posso te ajudar?',700);menu()}
+function modelos(){etapa='modelo';bot(`Esses são os mais pedidos agora:<div class="card">${Object.entries(MOD).map(([k,m])=>`<div class="mod"><b>${m.n}</b><i>${m.d}</i><span class="tag">${m.p}</span>${m.s11?' <span class="tag">brindes da Black</span>':''}</div>`).join('')}</div>`);
+  bot('Qual te interessou?');ops([['m:s11','Série 11 46 mm'],['m:mini','Série 11 Mini'],['m:ultra','Ultra Max'],['m:ultraf','Ultra Feminino'],['m:mrex','M Rex'],['ajuda','🤔 Não sei qual']])}
+function black(){bot(BRINDE);bot('Tem pronta entrega na loja física e no online 🚀 Quer ver os modelos da Série 11?');ops([['modelos','⌚ Ver modelos'],['ajuda','🤔 Me ajuda a escolher'],['menu','↩ Menu']])}
+function vendedor(){bot('Show! Já chamei um vendedor 🙋 Ele te responde aqui mesmo em instantes.\n\nEnquanto isso, quer adiantar escolhendo o modelo?');ops([['modelos','⌚ Ver modelos'],['menu','↩ Menu']])}
+function ajuda(){etapa='uso';bot('Bora achar o ideal! 😄 É pra você ou pra presente?');ops([['u:mim','Pra mim'],['u:presente','🎁 Presente']])}
+function uso(k){C.uso=k;etapa='pulso';bot(k==='presente'?'Que presente top! 🎁 E o pulso da pessoa é mais fino ou mais largo?':'E o seu pulso é mais fino ou mais largo?');ops([['p:fino','Fino'],['p:medio','Médio/largo']])}
+function pulso(k){C.pulso=k;etapa='estilo';bot('Última: qual estilo combina mais?');ops([['e:elegante','✨ Elegante, dia a dia'],['e:esporte','🏃 Treino e esporte'],['e:robusto','💪 Robusto, chamativo']])}
+function estilo(k){C.estilo=k;const rec=k==='robusto'?(C.pulso==='fino'?'ultraf':'ultra'):k==='esporte'?(C.pulso==='fino'?'mini':'mrex'):C.pulso==='fino'?'mini':'s11';
+  const m=MOD[rec];bot(`Pra você eu indico o <b>${m.n}</b> 👌\n${m.d}${m.s11?'\n\n'+BRINDE:''}`);ops([['m:'+rec,'✅ Quero esse'],['modelos','Ver outros']])}
+function modelo(k){C.mod=k;const m=MOD[k];etapa='cor';bot(`<b>${m.n}</b>, ótima escolha! Qual cor?`);ops(m.c.map(c=>['c:'+c,c]))}
+function cor(c){C.cor=c;etapa='nome';const m=MOD[C.mod];bot(`${m.n} na cor <b>${esc(c)}</b> 😍${m.s11?'\nE com os brindes da Black inclusos.':''}\n\nVou te mandar o preço da promoção e reservar o seu. Qual o seu <b>nome</b>?`);ops([])}
+function nome(t){C.nome=t.split(' ')[0].slice(0,20);etapa='local';bot(`Prazer, ${esc(C.nome)}! Você prefere:`);ops([['l:loja','🏬 Retirar na loja'],['l:entrega','🛵 Receber em casa']])}
+function local(k){C.local=k;etapa='pag';bot('E como pensa em pagar?');ops([['g:pix','💠 Pix'],['g:cartao','💳 Cartão parcelado'],['g:dinheiro','💵 Dinheiro']])}
+function pag(k){C.pag=k;etapa='fim';const m=MOD[C.mod],P={pix:'Pix',cartao:'Cartão parcelado',dinheiro:'Dinheiro'}[k];
+  bot(`Prontinho, ${esc(C.nome)}! ✅ Reservei pra você:<div class="card"><div><span>Modelo</span><b>${esc(m.n)}</b></div><div><span>Cor</span><b>${esc(C.cor)}</b></div>${m.s11?'<div><span>Brindes Black</span><b>2 pulseiras, capa, limpador, película 1 ano</b></div>':''}<div><span>Receber</span><b>${C.local==='loja'?'Retirada na loja':'Entrega em casa'}</b></div><div><span>Pagamento</span><b>${P}</b></div></div>`);
+  bot('Um vendedor já vai te mandar o <b>preço da Black</b> e as condições de pagamento aqui mesmo. Vem ser Max! 💚🚀');
+  bloco(`<h3>📲 O que chega pro vendedor</h3><div class="card"><div><span>Cliente</span><b>${esc(C.nome)}</b></div><div><span>Quer</span><b>${esc(m.n)}</b></div><div><span>Cor</span><b>${esc(C.cor)}</b></div>${C.uso?`<div><span>Para</span><b>${C.uso==='presente'?'Presente':'Uso próprio'}</b></div>`:''}<div><span>Receber</span><b>${C.local==='loja'?'Retirada na loja':'Entrega'}</b></div><div><span>Pagamento</span><b>${P}</b></div><div><span>Status</span><b style="color:#15803d">Pronto pra fechar</b></div></div><p>O robô atendeu, tirou as dúvidas e deixou o cliente pronto. O vendedor só manda o preço e fecha. E esse contato fica salvo pra receber a próxima promoção e o pedido de avaliação no Google.</p>`);
+  ops([['modelos','⌚ Ver outro modelo'],['menu','↩ Menu']])}
+function acao(k,rot){if(rot)eu(rot);
+  if(k==='menu'){bot('Posso te ajudar com mais alguma coisa?');menu()}
+  else if(k==='modelos')modelos();else if(k==='black')black();else if(k==='vendedor')vendedor();else if(k==='ajuda')ajuda();
+  else if(k.startsWith('u:'))uso(k.slice(2));else if(k.startsWith('p:'))pulso(k.slice(2));else if(k.startsWith('e:'))estilo(k.slice(2));
+  else if(k.startsWith('m:'))modelo(k.slice(2));else if(k.startsWith('c:'))cor(k.slice(2));
+  else if(k.startsWith('l:'))local(k.slice(2));else if(k.startsWith('g:'))pag(k.slice(2))}
+function norm(t){return t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'')}
+function livre(t){const n=norm(t);
+  if(etapa==='nome')return nome(t);
+  if(etapa==='cor'){const m=MOD[C.mod],c=m.c.find(x=>n.includes(norm(x).split(' ')[0]));if(c)return cor(c)}
+  if(/ultra/.test(n)&&/femin/.test(n))return modelo('ultraf');if(/ultra/.test(n))return modelo('ultra');if(/rex/.test(n))return modelo('mrex');if(/mini/.test(n))return modelo('mini');if(/s11|serie 11|46/.test(n))return modelo('s11');
+  if(/preco|quanto|valor|custa/.test(n)){bot('Os preços da Black mudam com as ofertas relâmpago, então o vendedor te passa o valor atualizado na hora 😉 Me diz qual modelo te interessa que eu já deixo tudo pronto pra ele.');return modelos()}
+  if(/brinde|black|promo|oferta|desconto/.test(n))return black();
+  if(/tamanho|pulso/.test(n)){bot('Pra pulso fino, o <b>Série 11 Mini</b>. Pra pulso médio ou grande, o <b>Série 11 46 mm</b> ou o <b>Ultra Max 49 mm</b>. Quer que eu te ajude a escolher?');return ops([['ajuda','🤔 Me ajuda'],['modelos','⌚ Ver modelos']])}
+  if(/whats|ligac|ligar|chamada|funcao|funcoes/.test(n)){bot('Os modelos da Série 11 recebem e respondem o <b>WhatsApp por voz</b>, fazem e recebem <b>ligações</b>, monitoram sono e batimentos e têm mais de 50 funções ⌚');return ops([['modelos','⌚ Ver modelos'],['menu','↩ Menu']])}
+  if(/entreg|retir|loja|endereco|pronta/.test(n)){bot('Temos <b>pronta entrega</b>: dá pra retirar na loja física ou receber em casa. O vendedor combina com você o melhor jeito 🛵');return ops([['modelos','⌚ Ver modelos'],['menu','↩ Menu']])}
+  if(/vendedor|atendente|humano|pessoa/.test(n))return vendedor();
+  if(/modelo|relogio|smartwatch|ver/.test(n))return modelos();
+  if(/presente|ajuda|escolher|indica/.test(n))return ajuda();
+  if(/^(oi|ola|opa|eae|e ai|bom dia|boa tarde|boa noite)/.test(n)){bot('Oi! 😄 Me diz como posso te ajudar:');return menu()}
+  if(/obrigad|valeu|vlw/.test(n)){bot('Nós que agradecemos! Vem ser Max 💚');return}
+  bot('Hmm, essa não entendi 😅 Toca numa das opções ou escreve, por exemplo, "quanto custa o S11" ou "qual tamanho pro meu pulso".');if(etapa==='menu'||etapa==='fim')menu()}
+OPS.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=b.dataset.k,rot=b.textContent.replace(/^[^\p{L}\p{N}]+/u,'').trim()||b.textContent;OPS.innerHTML='';acao(k,rot)});
+$('form').addEventListener('submit',e=>{e.preventDefault();const t=$('txt').value.trim();if(!t)return;$('txt').value='';OPS.innerHTML='';eu(t);livre(t)});
+$('reset').addEventListener('click',inicio);
+inicio();
+})();
+</script>
+</body>
+</html>
