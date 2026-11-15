@@ -287,6 +287,22 @@ svg.i{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke
 .how ol{margin:0;padding-left:18px;color:#C9D3E6;font-size:13.5px;line-height:1.6}
 .rolebadge{font-size:11px;font-weight:800;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.09);color:#C9D3E6;border:0;white-space:nowrap}
 .rk.self{background:#F5F8FF}
+.cks{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.ck{font-size:11px;font-weight:700;padding:4px 8px;border-radius:7px;border:1px dashed #C9D1E0;background:#fff;color:var(--muted)}
+.ck.on{background:var(--green-soft);color:var(--green);border:1px solid transparent}
+.tagp{font-size:11px;font-weight:800;padding:4px 8px;border-radius:7px;background:var(--amber-soft);color:#B45309;white-space:nowrap}
+.tagok{font-size:11px;font-weight:800;padding:4px 8px;border-radius:7px;background:var(--green-soft);color:var(--green);white-space:nowrap}
+.rcs{display:flex;flex-wrap:wrap;gap:6px}
+.rc input{position:absolute;opacity:0;pointer-events:none}
+.rc span{display:inline-block;border:1px solid var(--line);background:#fff;border-radius:999px;padding:9px 13px;font-size:13.5px;font-weight:700;color:var(--ink2);cursor:pointer}
+.rc input:checked+span{background:var(--ink);color:#fff;border-color:var(--ink)}
+.rc.chk input:checked+span{background:var(--green-soft);color:var(--green);border-color:transparent}
+.rc.chk input:checked+span:before{content:"✓ "}
+.pend-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.pend-row:last-child{border-bottom:0}
+.pend-row .mid{flex:1;min-width:0}
+.pend-row .t{font-weight:700;font-size:14px}
+.pend-row .s{font-size:12px;color:var(--muted);margin-top:2px}
 .foot{text-align:center;color:var(--muted);font-size:12px;margin:26px 0 0;line-height:1.5}
 .pulse{animation:pulse .9s ease}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(18,161,80,.45)}100%{box-shadow:0 0 0 14px rgba(18,161,80,0)}}
@@ -309,7 +325,7 @@ const LS = {
   set(k, v) { MEM[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
   del(k) { delete MEM[k]; try { localStorage.removeItem(k); } catch (e) {} }
 };
-const KEY = 'placar_demo_v1';
+const KEY = 'placar_demo_v2';
 
 /* ======================= ícones ======================= */
 const P = {
@@ -365,6 +381,8 @@ function load() { DATA = LS.get(KEY, null); if (!DATA || !DATA.cfg) { DATA = see
 const cfg = () => DATA.cfg;
 const vend = id => DATA.vendedores.find(v => v.id === id);
 const isQtd = () => cfg().metaTipo === 'qtd';
+const pendentes = s => (cfg().checklist || []).filter(it => !(s.chk && s.chk[it])).length;
+const pendMes = (vid, m = new Date()) => { const r = monthRange(m); return DATA.vendas.filter(s => (!vid || s.vid === vid) && s.data >= r.from && s.data <= r.to && pendentes(s)).length; };
 const fmtBase = n => isQtd() ? `${Math.round(n)} venda${Math.round(n) !== 1 ? 's' : ''}` : brl0(n);
 
 function stats(vid, from, to) {
@@ -438,7 +456,7 @@ function vPlacar() {
     <div class="kpis">
       <div class="kpi"><span>Vendas hoje</span><b class="num">${isQtd() ? hoje.qtd : kbrl(hoje.fat)}</b><em class="${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '▲' : '▼'} ${isQtd() ? Math.abs(delta) : kbrl(Math.abs(delta))} vs ontem</em></div>
       <div class="kpi"><span>Projeção do mês</span><b class="num">${isQtd() ? Math.round(projTeam) : kbrl(projTeam)}</b><em class="${projTeam >= metaTeam ? 'up' : 'down'}">${projTeam >= metaTeam ? 'bate a meta' : 'falta ' + (isQtd() ? Math.ceil(metaTeam - projTeam) : kbrl(metaTeam - projTeam))}</em></div>
-      <div class="kpi"><span>Ticket médio</span><b class="num">${kbrl(team.ticket)}</b><em>${team.qtd} vendas no mês</em></div>
+      ${isQtd() ? `<div class="kpi"><span>Pendências</span><b class="num" style="color:${pendMes(null) ? '#B45309' : 'var(--green)'}">${pendMes(null)}</b><em>vendas com checklist aberto</em></div>` : `<div class="kpi"><span>Ticket médio</span><b class="num">${kbrl(team.ticket)}</b><em>${team.qtd} vendas no mês</em></div>`}
     </div>
 
     <div class="section">
@@ -458,6 +476,8 @@ function vPlacar() {
         </div>`).join('') || '<div class="empty"><b>Sem vendedores</b>Cadastre a equipe em Ajustes.</div>'}</div>
     </div>
 
+    ${isGestor() ? pendSection(mr) : ''}
+    ${canalSection(mr)}
     <div class="section">
       <div class="section-h"><h3>Vendas por dia</h3><span style="font-size:12.5px;color:var(--muted);font-weight:700">${esc(monthLabel(t))}</span></div>
       <div class="card chart">${dailyChart(null, t)}</div>
@@ -470,6 +490,20 @@ function vPlacar() {
   </div>`;
 }
 
+function pendSection(mr) {
+  const items = cfg().checklist || []; if (!items.length) return '';
+  const mes = DATA.vendas.filter(s => s.data >= mr.from && s.data <= mr.to);
+  const rows = DATA.vendedores.map(v => { const vs = mes.filter(s => s.vid === v.id && pendentes(s)); return { v, n: vs.length, by: items.map(it => [it, vs.filter(s => !(s.chk && s.chk[it])).length]).filter(x => x[1]) }; }).filter(r => r.n).sort((a, b) => b.n - a.n);
+  return `<div class="section"><div class="section-h"><h3>Pendências da equipe</h3><span style="font-size:12.5px;color:var(--muted);font-weight:700">${rows.reduce((a, r) => a + r.n, 0)} vendas</span></div>
+    <div class="card">${rows.length ? rows.map(r => `<div class="pend-row" data-act="ver-vend" data-id="${r.v.id}">${av(r.v)}<div class="mid"><div class="t">${esc(r.v.nome)}</div><div class="s">${r.by.map(([it, n]) => `${n} sem ${esc(it.toLowerCase())}`).join(' · ')}</div></div><span class="tagp">${r.n}</span></div>`).join('') : '<div class="empty"><b>Tudo em dia</b>Nenhuma venda com pendência neste mês.</div>'}</div></div>`;
+}
+function canalSection(mr) {
+  const canais = cfg().canais || []; if (!canais.length) return '';
+  const mes = DATA.vendas.filter(s => s.data >= mr.from && s.data <= mr.to), tot = mes.length || 1;
+  const rows = canais.map(c => [c, mes.filter(s => s.canal === c).length]).sort((a, b) => b[1] - a[1]);
+  const max = Math.max(1, ...rows.map(r => r[1]));
+  return `<div class="section"><div class="section-h"><h3>Vendas por canal</h3></div><div class="card">${rows.map(([c, n]) => `<div style="padding:12px 14px;border-bottom:1px solid var(--line)"><div style="display:flex;justify-content:space-between;font-size:13.5px"><b>${esc(c)}</b><span style="color:var(--muted);font-weight:700">${n} · ${Math.round(n / tot * 100)}%</span></div><div class="rk" style="padding:0;border:0;cursor:default"><div class="mid"><div class="bar"><i class="c-mid" style="width:${n / max * 100}%"></i></div></div></div></div>`).join('')}</div></div>`;
+}
 function dailyChart(vid, m) {
   const { from, days } = monthRange(m), tY = today();
   const vals = [...Array(days)].map((_, i) => { const d = ymd(addDays(fromYmd(from), i)); const s = stats(vid, d, d); return { d, v: isQtd() ? s.qtd : s.fat, fut: d > tY, hoje: d === tY }; });
@@ -485,7 +519,11 @@ function feed(vid, n, del = false) {
   const arr = DATA.vendas.filter(s => !vid || s.vid === vid).sort((a, b) => b.data.localeCompare(a.data) || b.ts - a.ts).slice(0, n);
   if (!arr.length) return '<div class="empty"><b>Nenhuma venda ainda</b>Toque em “Lançar venda”.</div>';
   return arr.map(s => { const v = vend(s.vid); if (!v) return ''; const isToday = s.data === today();
-    return `<div class="feed">${av(v)}<div class="mid"><b>${esc(first(v.nome))}</b> vendeu${s.cliente ? ' para ' + esc(s.cliente) : ''}<small>${isToday ? relTime(s.ts) : s.data.split('-').reverse().join('/')}</small></div><div class="v num">+${brl0(s.valor)}</div>${del ? `<button class="del" data-act="del-venda" data-id="${s.id}" aria-label="Excluir venda">${ic('trash')}</button>` : ''}</div>`; }).join('');
+    const det = [isToday ? relTime(s.ts) : s.data.split('-').reverse().join('/'), s.canal, s.pag].filter(Boolean).join(' · ');
+    const items = cfg().checklist || [], pend = pendentes(s);
+    const cks = del && items.length ? `<div class="cks">${items.map(it => `<button class="ck ${s.chk && s.chk[it] ? 'on' : ''}" data-act="chk" data-id="${s.id}" data-v="${esc(it)}">${s.chk && s.chk[it] ? '✓ ' : ''}${esc(it)}</button>`).join('')}</div>` : '';
+    const right = num(s.valor) ? `<div class="v num">+${brl0(s.valor)}</div>` : items.length ? (pend ? `<span class="tagp">${pend} pendente${pend > 1 ? 's' : ''}</span>` : `<span class="tagok">✓ completa</span>`) : '';
+    return `<div class="feed">${av(v)}<div class="mid"><b>${esc(first(v.nome))}</b> vendeu${s.cliente ? ' para ' + esc(s.cliente) : ''}${s.matricula ? ` <span style="color:var(--muted);font-size:12px">· mat. ${esc(s.matricula)}</span>` : ''}<small>${esc(det)}</small>${cks}</div>${right}${del ? `<button class="del" data-act="del-venda" data-id="${s.id}" aria-label="Excluir venda">${ic('trash')}</button>` : ''}</div>`; }).join('');
 }
 
 function vMeu() { ui.vend = ui.me; return vVendedor(true); }
@@ -514,7 +552,7 @@ function vVendedor(self = false) {
 
     <div class="card section">
       <div class="goal">
-        <div class="gt"><b class="num">${Math.round(c.pct)}% da meta</b><span>${fmtBase(c.base)} de ${fmtBase(c.meta)}</span></div>
+        <div class="gt"><b class="num">${Math.round(c.pct)}% da meta</b><span>${fmtBase(c.base)} de ${isQtd() ? Math.round(c.meta) : brl0(c.meta)}</span></div>
         <div class="track"><i class="${barCls(c.pct)}" style="width:${Math.min(100, c.pct / maxAlvo * 100)}%"></i>
           ${c.faixas.map(f => `<div class="tick ${c.pct >= f.alvo ? 'hit' : ''}" style="left:${f.alvo / maxAlvo * 100}%"><span>${f.alvo}%</span></div>`).join('')}
         </div>
@@ -523,7 +561,8 @@ function vVendedor(self = false) {
       ${c.prox ? `<div class="nextbox"><div class="ic">${ic('flag')}</div><div><b>Faltam ${fmtBase(c.faltaProx)} para o bônus de ${brl0(c.prox.premio)}</b><span>${!isQtd() && nVendas ? `≈ ${nVendas} venda${nVendas !== 1 ? 's' : ''} no seu ticket médio de ${brl0(c.ticket)} · ` : ''}no ritmo atual você fecha o mês com ${Math.round(c.proj / c.meta * 100)}%</span></div></div>`
         : `<div class="nextbox"><div class="ic" style="background:var(--green-soft);color:var(--green)">${ic('trophy')}</div><div><b>Todas as faixas de bônus batidas!</b><span>Agora é brigar pelo 1º lugar${num(cfg().destaque) ? ' e pelo prêmio de destaque de ' + brl0(cfg().destaque) : ''}.</span></div></div>`}
     </div>
-    <div class="card tip"><div class="ic">${ic('zap')}</div><div><b>A próxima venda vale ${brl(prox)} de comissão</b><span>${above ? `Faltam ${isQtd() ? (above.key - (isQtd() ? c.qtd : c.fat) + 1) + ' venda(s)' : brl0(above.key - c.fat + 1)} para passar ${esc(first(above.v.nome))} e subir para ${pos - 1}º` : 'Você está em 1º lugar. Segura a liderança!'}</span></div></div>
+    <div class="card tip"><div class="ic">${ic('zap')}</div><div><b>A próxima venda vale ${brl(prox)} de comissão</b><span>${above ? `${isQtd() ? ((n => n === 1 ? 'Falta 1 venda' : 'Faltam ' + n + ' vendas')(above.key - c.qtd + 1)) : 'Faltam ' + brl0(above.key - c.fat + 1)} para passar ${esc(first(above.v.nome))} e subir para ${pos - 1}º` : 'Você está em 1º lugar. Segura a liderança!'}</span></div></div>
+    ${pendMes(v.id, m) ? `<div class="card tip"><div class="ic" style="background:var(--amber-soft);color:#B45309">${ic('flag')}</div><div><b>${pendMes(v.id, m)} venda${pendMes(v.id, m) > 1 ? 's' : ''} com pendência</b><span>${self ? 'Toque no item da venda, lá embaixo, quando resolver.' : 'Itens do checklist ainda não marcados.'}</span></div></div>` : ''}
 
     <div class="section"><div class="section-h"><h3>Vendas por dia</h3></div><div class="card chart">${dailyChart(v.id, m)}</div></div>
     <div class="section"><div class="section-h"><h3>Vendas de ${esc(first(v.nome))}</h3></div><div class="card">${feed(v.id, 12, true)}</div></div>
@@ -541,14 +580,14 @@ function vRelatorio() {
   <div class="wrap">
     <div class="monthnav"><button class="nb" data-act="rel-mes" data-v="-1" aria-label="Mês anterior">${ic('left')}</button><div style="flex:1;text-align:center;font-weight:800">${esc(monthLabel(m))}${isCur ? ' <span style="color:var(--muted);font-weight:600;font-size:12.5px">· parcial</span>' : ''}</div><button class="nb" data-act="rel-mes" data-v="1" aria-label="Próximo mês">${ic('right')}</button></div>
     <div class="kpis" style="margin-top:12px;grid-template-columns:repeat(3,1fr)">
-      <div class="kpi"><span>Faturado</span><b class="num">${kbrl(tot.fat)}</b><em>${tot.qtd} vendas</em></div>
-      <div class="kpi"><span>Comissões</span><b class="num">${kbrl(tot.com)}</b><em>${tot.fat ? (tot.com / tot.fat * 100).toFixed(1).replace('.', ',') : 0}% do faturado</em></div>
+      ${isQtd() ? `<div class="kpi"><span>Vendas</span><b class="num">${tot.qtd}</b><em>${pendMes(null, m)} com pendência</em></div>` : `<div class="kpi"><span>Faturado</span><b class="num">${kbrl(tot.fat)}</b><em>${tot.qtd} vendas</em></div>`}
+      <div class="kpi"><span>Comissões</span><b class="num">${kbrl(tot.com)}</b><em>${cfg().comTipo === 'fixo' ? brl(cfg().comValor) + ' por venda' : (tot.fat ? (tot.com / tot.fat * 100).toFixed(1).replace('.', ',') : 0) + '% do faturado'}</em></div>
       <div class="kpi"><span>Bônus</span><b class="num">${kbrl(tot.bonus)}</b><em>${(n => n === 1 ? '1 bateu faixa' : n + ' bateram faixa')(rows.filter(r => r.c.bonus).length)}</em></div>
     </div>
     <div class="card section"><div class="tbl-wrap"><table class="tbl">
-      <thead><tr><th>Vendedor</th><th>Vendido</th><th>Meta</th><th>A pagar</th></tr></thead>
-      <tbody>${rows.map(r => { const d = r.v.id === lider ? dest : 0; return `<tr><td><b>${esc(first(r.v.nome))}</b>${d ? ` <span class="badge" style="background:#FFF4DE;color:#B45309">1º</span>` : ''}<small class="sm">com. ${brl(r.c.com)}${r.c.bonus + d ? ` + bônus ${brl0(r.c.bonus + d)}` : ''}</small></td><td class="num">${kbrl(r.c.fat)}<small class="sm">${r.c.qtd} vendas</small></td><td class="num" style="color:${r.c.pct >= 100 ? 'var(--green)' : 'inherit'};font-weight:700">${Math.round(r.c.pct)}%</td><td class="num"><b>${brl(r.c.total + d)}</b></td></tr>`; }).join('')}</tbody>
-      <tfoot><tr><td>Total</td><td class="num">${kbrl(tot.fat)}</td><td></td><td class="num">${brl(tot.com + tot.bonus)}</td></tr></tfoot>
+      <thead><tr><th>Vendedor</th><th>${isQtd() ? 'Vendas' : 'Vendido'}</th><th>Meta</th><th>A pagar</th></tr></thead>
+      <tbody>${rows.map(r => { const d = r.v.id === lider ? dest : 0; return `<tr><td><b>${esc(first(r.v.nome))}</b>${d ? ` <span class="badge" style="background:#FFF4DE;color:#B45309">1º</span>` : ''}<small class="sm">com. ${brl(r.c.com)}${r.c.bonus + d ? ` + bônus ${brl0(r.c.bonus + d)}` : ''}</small></td><td class="num">${isQtd() ? `${r.c.qtd}<small class="sm">${pendMes(r.v.id, m) ? pendMes(r.v.id, m) + ' pendente' + (pendMes(r.v.id, m) > 1 ? 's' : '') : 'sem pendência'}</small>` : `${kbrl(r.c.fat)}<small class="sm">${r.c.qtd} vendas</small>`}</td><td class="num" style="color:${r.c.pct >= 100 ? 'var(--green)' : 'inherit'};font-weight:700">${Math.round(r.c.pct)}%</td><td class="num"><b>${brl(r.c.total + d)}</b></td></tr>`; }).join('')}</tbody>
+      <tfoot><tr><td>Total</td><td class="num">${isQtd() ? tot.qtd : kbrl(tot.fat)}</td><td></td><td class="num">${brl(tot.com + tot.bonus)}</td></tr></tfoot>
     </table></div></div>
     <div class="btn-row">
       <button class="btn sec" data-act="copy-rel">${ic('copy')} Copiar tabela</button>
@@ -592,6 +631,11 @@ function vAjustes() {
           <button type="button" class="icon-x" data-act="del-faixa" data-v="${i}" aria-label="Remover faixa">${ic('x')}</button></div>`).join('')}
         <button type="button" class="btn sec sm" data-act="add-faixa">${ic('plus')} Adicionar faixa</button>
         <div class="fld"><label>Prêmio para o 1º lugar do mês (R$)</label><input name="destaque" inputmode="decimal" value="${String(c.destaque || 0).replace('.', ',')}"><div class="hint">O vendedor ganha só a maior faixa que bateu (as faixas não somam). Coloque 0 para não ter prêmio de destaque.</div></div>
+      </div></div>
+      <div class="cfg-sec"><h4>Lançamento da venda</h4><div class="card cfg-card">
+        <div class="fld"><label>Canais de venda</label><input name="canais" value="${esc((c.canais || []).join(', '))}"><div class="hint">Separe por vírgula. Deixe vazio para não perguntar.</div></div>
+        <div class="fld"><label>Formas de pagamento</label><input name="pagamentos" value="${esc((c.pagamentos || []).join(', '))}"></div>
+        <div class="fld"><label>Checklist de cada venda</label><input name="checklist" value="${esc((c.checklist || []).join(', '))}"><div class="hint">O que precisa estar feito para a venda contar como completa. O vendedor pode marcar depois, e o gestor vê quem está com pendência.</div></div>
       </div></div>
       <button class="btn brand" type="submit">${ic('check')} Salvar regras</button>
     </form>
@@ -643,6 +687,7 @@ function renderChooser() {
     <div class="logo">${ic('trophy')}</div>
     <h1>Placar de Vendas</h1>
     <p class="sub">Um link só para a equipe toda. Cada pessoa entra com o próprio login e vê só o que é dela.</p>
+    <div class="how" style="margin:0 0 18px"><b>Modelo pronto para venda de cartão de benefícios</b><div style="color:#C9D3E6;font-size:13.5px;line-height:1.55">Meta por quantidade de vendas, comissão por venda, canal, forma de pagamento e checklist de cada venda (app ativado, cadastro conferido, 1ª mensalidade). Tudo muda em Ajustes.</div></div>
     <div class="q">Como quer ver a demonstração?</div>
     <button class="role-card" data-act="role" data-v="gestor"><div class="ic" style="background:#FFD66B;color:#3B2A00">${ic('chart')}</div><div><b>Sou gestor</b><span>Vejo a equipe toda em tempo real: ranking, metas, quanto pagar no fechamento e as regras de comissão.</span></div></button>
     <button class="role-card ${ui.pickMe ? 'on' : ''}" data-act="role" data-v="vendedor"><div class="ic" style="background:#3B6BFF;color:#fff">${ic('user')}</div><div><b>Sou vendedor</b><span>Lanço minhas vendas na hora e acompanho minha comissão, meta e posição no ranking.</span></div></button>
@@ -681,11 +726,15 @@ function openNova() {
     <form id="f-venda" class="f" autocomplete="off">
       <input type="hidden" name="vid" value="${sel}">
       ${!isGestor() ? '' : `<div class="fld"><label>Quem vendeu</label><div class="pick">${DATA.vendedores.map(v => `<button type="button" class="${v.id === sel ? 'on' : ''}" data-act="pick-vend" data-id="${v.id}">${av(v)}${esc(first(v.nome))}</button>`).join('')}</div><div class="hint">O gestor também pode lançar ou corrigir venda de qualquer um.</div></div>`}
-      <div class="fld"><label>Valor da venda</label><input class="big-input num" name="valor" inputmode="decimal" placeholder="R$ 0,00" required></div>
+      ${isQtd() ? '' : `<div class="fld"><label>Valor da venda</label><input class="big-input num" name="valor" inputmode="decimal" placeholder="R$ 0,00" required></div>`}
       <div class="row2">
         <div class="fld"><label>Data</label><input type="date" name="data" value="${today()}" max="${today()}" required></div>
-        <div class="fld"><label>Cliente (opcional)</label><input name="cliente" placeholder="Nome"></div>
+        ${isQtd() ? `<div class="fld"><label>Matrícula</label><input name="matricula" inputmode="numeric" placeholder="Opcional"></div>` : `<div class="fld"><label>Cliente (opcional)</label><input name="cliente" placeholder="Nome"></div>`}
       </div>
+      ${isQtd() ? `<div class="fld"><label>Cliente titular (opcional)</label><input name="cliente" placeholder="Nome"></div>` : ''}
+      ${(cfg().canais || []).length ? `<div class="fld"><label>Canal</label><div class="rcs">${cfg().canais.map((c, i) => `<label class="rc"><input type="radio" name="canal" value="${esc(c)}" ${i === 0 ? 'checked' : ''}><span>${esc(c)}</span></label>`).join('')}</div></div>` : ''}
+      ${(cfg().pagamentos || []).length ? `<div class="fld"><label>Forma de pagamento</label><div class="rcs">${cfg().pagamentos.map((c, i) => `<label class="rc"><input type="radio" name="pag" value="${esc(c)}" ${i === 0 ? 'checked' : ''}><span>${esc(c)}</span></label>`).join('')}</div></div>` : ''}
+      ${(cfg().checklist || []).length ? `<div class="fld"><label>Já está feito?</label><div class="rcs">${cfg().checklist.map(c => `<label class="rc chk"><input type="checkbox" name="chk" value="${esc(c)}"><span>${esc(c)}</span></label>`).join('')}</div><div class="hint">O que ficar pendente dá para marcar depois, direto na venda.</div></div>` : ''}
       <div id="prev"></div>
       <button class="btn brand" type="submit">${ic('check')} Lançar venda</button>
     </form>`);
@@ -694,21 +743,22 @@ function openNova() {
 }
 function previewVenda() {
   const f = $('#f-venda'); if (!f) return;
-  const v = vend(f.vid.value), val = parseMoney(f.valor.value);
-  if (!v || !val) { $('#prev').innerHTML = ''; return; }
+  const v = vend(f.vid.value), val = f.valor ? parseMoney(f.valor.value) : 0;
+  if (!v || (!isQtd() && !val)) { $('#prev').innerHTML = ''; return; }
   const before = calcMes(v), com = cfg().comTipo === 'pct' ? val * num(cfg().comValor) / 100 : num(cfg().comValor);
   const newBase = before.base + (isQtd() ? 1 : val), newPct = before.meta ? newBase / before.meta * 100 : 0;
   const hit = before.faixas.filter(fx => newPct >= fx.alvo && before.pct < fx.alvo).pop();
   $('#prev').innerHTML = `<div class="preview-sale">${esc(first(v.nome))} ganha <b>${brl(com)}</b> de comissão com essa venda${hit ? ` e <b>libera o bônus de ${brl0(hit.premio)}</b> (${hit.alvo}% da meta) 🎉` : ` e vai para <b>${Math.round(newPct)}%</b> da meta`}.</div>`;
 }
 async function saveVenda(f) {
-  const vid = f.vid.value, valor = parseMoney(f.valor.value), data = f.data.value;
-  if (!valor || valor <= 0) { toast('Informe o valor da venda'); f.valor.focus(); return; }
+  const vid = f.vid.value, valor = f.valor ? parseMoney(f.valor.value) : 0, data = f.data.value;
+  if (!isQtd() && (!valor || valor <= 0)) { toast('Informe o valor da venda'); f.valor.focus(); return; }
   const v = vend(vid), m = fromYmd(data);
   const per = monthRange(new Date()), sameMonth = data >= per.from && data <= per.to;
   const posBefore = sameMonth ? ranking(per.from, per.to).findIndex(r => r.v.id === vid) : -1;
   const before = calcMes(v, m);
-  DATA.vendas.push({ id: uid(), vid, valor, data, cliente: (f.cliente.value || '').trim(), ts: Date.now() });
+  const chk = {}; f.querySelectorAll('[name=chk]:checked').forEach(x => chk[x.value] = true);
+  DATA.vendas.push({ id: uid(), vid, valor, data, cliente: (f.cliente?.value || '').trim(), matricula: (f.matricula?.value || '').trim(), canal: f.querySelector('[name=canal]:checked')?.value || '', pag: f.querySelector('[name=pag]:checked')?.value || '', chk, ts: Date.now() });
   save(); ui.lastVend = vid; closeSheet();
   const after = calcMes(v, m);
   const posAfter = sameMonth ? ranking(per.from, per.to).findIndex(r => r.v.id === vid) : -1;
@@ -716,7 +766,7 @@ async function saveVenda(f) {
   render(true);
   if (hit) toast(`🏆 ${first(v.nome)} bateu ${hit.alvo}% da meta e liberou o bônus de ${brl0(hit.premio)}!`, 'win');
   else if (posAfter > -1 && posAfter < posBefore) toast(`🚀 ${first(v.nome)} subiu para ${posAfter + 1}º lugar no mês!`, 'win');
-  else toast(isGestor() ? `Venda de ${brl0(valor)} lançada para ${first(v.nome)} · +${brl(after.com - before.com)}` : `Venda lançada! +${brl(after.com - before.com)} de comissão para você`);
+  else toast(isGestor() ? `Venda ${valor ? 'de ' + brl0(valor) + ' ' : ''}lançada para ${first(v.nome)} · +${brl(after.com - before.com)}` : `Venda lançada! +${brl(after.com - before.com)} de comissão para você`);
 }
 
 /* importar da planilha */
@@ -745,7 +795,7 @@ function parseImport(txt) {
       if (valor === null && /\d/.test(c) && !/[a-zà-ú]{3,}/i.test(c.replace(/r\$/i, ''))) { const v = parseMoney(c); if (v > 0) { valor = v; return; } }
       if (!nome && /[a-zà-ú]{2,}/i.test(c) && !/^(vendedor|nome|data|valor|total|cliente|consultor)$/i.test(c)) nome = c;
     });
-    if (nome && valor) rows.push({ nome, valor, data: data || today() });
+    if (nome && (valor || isQtd())) rows.push({ nome, valor: valor || 0, data: data || today() });
   });
   return rows;
 }
@@ -775,7 +825,7 @@ function renderTv() {
     <div class="tv-kpis">
       <div><small>Vendido no mês</small><b class="num">${isQtd() ? team.qtd : brl0(team.fat)}</b></div>
       <div><small>Meta da equipe</small><b class="num">${metaTeam ? Math.round((isQtd() ? team.qtd : team.fat) / metaTeam * 100) : 0}%</b></div>
-      <div><small>Vendas hoje</small><b class="num">${hoje.qtd} · ${kbrl(hoje.fat)}</b></div>
+      <div><small>Vendas hoje</small><b class="num">${isQtd() ? hoje.qtd : hoje.qtd + ' · ' + kbrl(hoje.fat)}</b></div>
     </div>
     <div class="tv-list">${rk.map((r, i) => `<div class="tv-row ${i === 0 && r.key > 0 ? 'first' : ''}"><div class="pos">${i + 1}º</div>${av(r.v)}<div class="mid"><div class="n">${esc(r.v.nome)}</div><div class="bar"><i class="${barCls(r.mc.pct)}" style="width:${r.key / maxK * 100}%"></i></div></div><div class="v"><b class="num">${isQtd() ? r.p.qtd : brl0(r.p.fat)}</b><small>${Math.round(r.mc.pct)}% da meta</small></div></div>`).join('')}</div>
     <div class="tv-foot">Deixe esta tela aberta na TV da loja. Ela se atualiza sozinha.</div>
@@ -802,6 +852,8 @@ function readCfgForm() {
   c.metaTipo = fd.get('metaTipo'); c.meta = parseMoney(fd.get('meta'));
   c.comTipo = fd.get('comTipo'); c.comValor = parseMoney(fd.get('comValor'));
   c.destaque = parseMoney(fd.get('destaque'));
+  const list = k => String(fd.get(k) || '').split(',').map(x => x.trim()).filter(Boolean);
+  c.canais = list('canais'); c.pagamentos = list('pagamentos'); c.checklist = list('checklist');
   c.faixas = c.faixas.map((_, i) => ({ alvo: num(fd.get('f_alvo_' + i)), premio: parseMoney(fd.get('f_premio_' + i)) })).filter(x => x.alvo > 0);
 }
 document.addEventListener('click', async e => {
@@ -833,6 +885,7 @@ document.addEventListener('click', async e => {
       const tsv = ['Vendedor\tVendas\tFaturado\t% Meta\tComissão\tBônus\tA pagar', ...rows.map(r => { const d = r.x.id === lider ? num(cfg().destaque) : 0; return [r.x.nome, r.c.qtd, f2(r.c.fat), Math.round(r.c.pct) + '%', f2(r.c.com), f2(r.c.bonus + d), f2(r.c.total + d)].join('\t'); })].join('\n');
       toast(await copyText(tsv) ? 'Copiado! É só colar no Excel ou Google Planilhas' : 'Não deu para copiar neste navegador'); break;
     }
+    case 'chk': { const sv = DATA.vendas.find(x => x.id === id); if (sv) { sv.chk = sv.chk || {}; sv.chk[v] = !sv.chk[v]; save(); render(true); if (sv.chk[v] && !pendentes(sv)) toast('Venda completa ✓'); } break; }
     case 'del-venda': if (!arm(el, '?')) break; DATA.vendas = DATA.vendas.filter(s => s.id !== id); save(); render(true); toast('Venda excluída'); break;
     case 'add-faixa': readCfgForm(); { const fx = cfg().faixas, last = fx[fx.length - 1]; fx.push({ alvo: last ? last.alvo + 20 : 100, premio: last ? Math.round(num(last.premio) * 1.5) : 200 }); } render(true); break;
     case 'del-faixa': readCfgForm(); cfg().faixas.splice(num(v), 1); render(true); break;
@@ -868,30 +921,35 @@ document.addEventListener('submit', e => {
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#tv').hidden) closeTv(); else closeSheet(); } });
 
 /* ======================= exemplo ======================= */
+const CANAIS = ['Loja', 'Externa', 'PAP', 'Indicação', 'Empresa (PJ)'], PAGS = ['Cartão de crédito', 'Débito em conta', 'Boleto', 'Pix'], CHK = ['App ativado', 'Cadastro conferido', '1ª mensalidade paga'];
 function seed() {
   let s = 20261115; const rnd = () => (s = (s * 1664525 + 1013904223) % 4294967296) / 4294967296;
   const vendedores = [
     ['Ana Beatriz Rocha', 1.3], ['Carlos Eduardo Lima', 1.12], ['Fernanda Souza', 1.02],
     ['João Victor Alves', 0.88], ['Patrícia Mendes', 0.76], ['Rafael Monteiro', 0.62]
   ].map(([nome, k]) => ({ id: uid(), nome, meta: 0, k }));
-  const clientes = ['Marcos P.', 'Juliana R.', 'Supermercado Bom Preço', 'Débora S.', 'Oficina do Zé', 'Luana T.', 'Renato C.', 'Farmácia Central', 'Bruna M.', 'Edilson F.', 'Clínica Vida', 'Tatiane O.'];
+  const clientes = ['Marcos Pereira', 'Juliana Ramos', 'Débora Santos', 'Edilson Farias', 'Luana Tavares', 'Renato Costa', 'Bruna Martins', 'Tatiane Oliveira', 'Josiane Lima', 'Raimundo Sousa', 'Kelly Barbosa', 'Adriano Pinheiro', 'Sandra Nunes', 'Wellington Dias'];
+  const pickW = arr => { const t = arr.reduce((a, x) => a + x[1], 0); let r = rnd() * t; for (const [x, w] of arr) { if ((r -= w) <= 0) return x; } return arr[0][0]; };
   const vendas = [], t = new Date(), start = new Date(t.getFullYear(), t.getMonth() - 1, 1);
   for (let d = new Date(start); ymd(d) <= today(); d = addDays(d, 1)) {
     const dow = d.getDay(), isToday = ymd(d) === today();
     vendedores.forEach(v => {
       const base = dow === 0 ? 0.25 : dow === 6 ? 1.3 : 1;
-      let n = Math.floor(rnd() * 3.6 * v.k * base + (rnd() < 0.4 * v.k ? 1 : 0));
+      let n = Math.floor(rnd() * 5.4 * v.k * base + (rnd() < 0.45 * v.k ? 1 : 0));
       if (isToday) n = v.k > 0.9 ? 1 + (rnd() < 0.4 ? 1 : 0) : (rnd() < 0.55 ? 1 : 0);
       for (let i = 0; i < n; i++) {
         const valor = Math.round((180 + rnd() * rnd() * 2400 * (0.75 + v.k * 0.35)) / 10) * 10;
         const ts = isToday ? Date.now() - Math.floor(rnd() * Math.min(9, Math.max(1, t.getHours() - 7)) * 36e5) : d.getTime() + 9 * 36e5 + rnd() * 9 * 36e5;
-        vendas.push({ id: uid(), vid: v.id, valor, data: ymd(d), cliente: rnd() < 0.7 ? clientes[Math.floor(rnd() * clientes.length)] : '', ts });
+        const age = Math.round((fromYmd(today()) - fromYmd(ymd(d))) / 864e5), chk = {};
+        CHK.forEach((it, j) => { if (rnd() < (age > 4 ? 0.997 : age > 1 ? 0.9 - j * 0.07 : 0.55 - j * 0.12)) chk[it] = true; });
+        vendas.push({ id: uid(), vid: v.id, valor: 0, data: ymd(d), cliente: rnd() < 0.75 ? clientes[Math.floor(rnd() * clientes.length)] : '', matricula: String(Math.floor(100000 + rnd() * 899999)), canal: pickW([['Loja', 4], ['Externa', 3], ['PAP', 2], ['Indicação', 1.5], ['Empresa (PJ)', 0.7]]), pag: pickW([['Cartão de crédito', 4], ['Débito em conta', 2.5], ['Boleto', 2], ['Pix', 1.5]]), chk, ts });
       }
     });
   }
   vendedores.forEach(v => delete v.k);
   return {
-    cfg: { empresa: 'Sua Loja', metaTipo: 'valor', meta: 30000, comTipo: 'pct', comValor: 3, faixas: [{ alvo: 80, premio: 150 }, { alvo: 100, premio: 400 }, { alvo: 120, premio: 800 }], destaque: 300 },
+    cfg: { empresa: 'Sua Franquia', metaTipo: 'qtd', meta: 50, comTipo: 'fixo', comValor: 20, faixas: [{ alvo: 80, premio: 100 }, { alvo: 100, premio: 250 }, { alvo: 120, premio: 500 }], destaque: 200,
+      canais: CANAIS, pagamentos: PAGS, checklist: CHK },
     vendedores, vendas
   };
 }
