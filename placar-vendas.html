@@ -325,7 +325,7 @@ const LS = {
   set(k, v) { MEM[k] = v; try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
   del(k) { delete MEM[k]; try { localStorage.removeItem(k); } catch (e) {} }
 };
-const KEY = 'placar_demo_v2';
+const KEY = 'placar_demo_v3';
 
 /* ======================= ícones ======================= */
 const P = {
@@ -383,6 +383,8 @@ const vend = id => DATA.vendedores.find(v => v.id === id);
 const isQtd = () => cfg().metaTipo === 'qtd';
 const pendentes = s => (cfg().checklist || []).filter(it => !(s.chk && s.chk[it])).length;
 const pendMes = (vid, m = new Date()) => { const r = monthRange(m); return DATA.vendas.filter(s => (!vid || s.vid === vid) && s.data >= r.from && s.data <= r.to && pendentes(s)).length; };
+const temCom = () => num(cfg().comValor) > 0;
+const temChk = () => (cfg().checklist || []).length > 0;
 const fmtBase = n => isQtd() ? `${Math.round(n)} venda${Math.round(n) !== 1 ? 's' : ''}` : brl0(n);
 
 function stats(vid, from, to) {
@@ -399,9 +401,9 @@ function calcMes(v, m = new Date()) {
   const pct = meta ? base / meta * 100 : 0;
   const com = comissaoDe(s.qtd, s.fat);
   const faixas = cfg().faixas.slice().sort((a, b) => a.alvo - b.alvo);
-  const atual = faixas.filter(f => pct >= f.alvo).pop() || null;
-  const prox = faixas.find(f => pct < f.alvo) || null;
-  const faltaProx = prox ? Math.max(0, prox.alvo / 100 * meta - base) : 0;
+  const atual = faixas.filter(f => base >= f.alvo).pop() || null;
+  const prox = faixas.find(f => base < f.alvo) || null;
+  const faltaProx = prox ? Math.max(0, prox.alvo - base) : 0;
   const bonus = atual ? num(atual.premio) : 0;
   const isCur = ymd(m).slice(0, 7) === today().slice(0, 7);
   const elapsed = isCur ? new Date().getDate() : days;
@@ -456,7 +458,7 @@ function vPlacar() {
     <div class="kpis">
       <div class="kpi"><span>Vendas hoje</span><b class="num">${isQtd() ? hoje.qtd : kbrl(hoje.fat)}</b><em class="${delta >= 0 ? 'up' : 'down'}">${delta >= 0 ? '▲' : '▼'} ${isQtd() ? Math.abs(delta) : kbrl(Math.abs(delta))} vs ontem</em></div>
       <div class="kpi"><span>Projeção do mês</span><b class="num">${isQtd() ? Math.round(projTeam) : kbrl(projTeam)}</b><em class="${projTeam >= metaTeam ? 'up' : 'down'}">${projTeam >= metaTeam ? 'bate a meta' : 'falta ' + (isQtd() ? Math.ceil(metaTeam - projTeam) : kbrl(metaTeam - projTeam))}</em></div>
-      ${isQtd() ? `<div class="kpi"><span>Pendências</span><b class="num" style="color:${pendMes(null) ? '#B45309' : 'var(--green)'}">${pendMes(null)}</b><em>vendas com checklist aberto</em></div>` : `<div class="kpi"><span>Ticket médio</span><b class="num">${kbrl(team.ticket)}</b><em>${team.qtd} vendas no mês</em></div>`}
+      ${isQtd() && !temChk() ? `<div class="kpi"><span>Bateram a meta</span><b class="num">${DATA.vendedores.filter(v => calcMes(v).pct >= 100).length} de ${DATA.vendedores.length}</b><em>vendedores no mês</em></div>` : isQtd() ? `<div class="kpi"><span>Pendências</span><b class="num" style="color:${pendMes(null) ? '#B45309' : 'var(--green)'}">${pendMes(null)}</b><em>vendas com checklist aberto</em></div>` : `<div class="kpi"><span>Ticket médio</span><b class="num">${kbrl(team.ticket)}</b><em>${team.qtd} vendas no mês</em></div>`}
     </div>
 
     <div class="section">
@@ -471,7 +473,7 @@ function vPlacar() {
           <div class="mid">
             <div class="t"><span>${esc(r.v.nome)}${!isGestor() && r.v.id === ui.me ? ' (você)' : ''}${r.mc.pct >= 100 ? '<span class="badge">META ✓</span>' : ''}</span><b class="num">${isQtd() ? r.p.qtd + ' vend.' : brl0(r.p.fat)}</b></div>
             <div class="bar"><i class="${barCls(r.mc.pct)}" style="width:${Math.min(100, r.mc.pct)}%"></i></div>
-            <div class="s"><span>${Math.round(r.mc.pct)}% da meta</span><span>${ui.periodo === 'mes' && (isGestor() || r.v.id === ui.me) ? 'ganha ' + brl0(r.mc.total) : r.p.qtd + ' venda' + (r.p.qtd !== 1 ? 's' : '') + ' ' + per.label}</span></div>
+            <div class="s"><span>${Math.round(r.mc.pct)}% da meta</span><span>${ui.periodo === 'mes' && (isGestor() || r.v.id === ui.me) ? (!temCom() && !r.mc.bonus && r.mc.prox ? 'faltam ' + fmtBase(r.mc.faltaProx) : 'ganha ' + brl0(r.mc.total)) : r.p.qtd + ' venda' + (r.p.qtd !== 1 ? 's' : '') + ' ' + per.label}</span></div>
           </div>
         </div>`).join('') || '<div class="empty"><b>Sem vendedores</b>Cadastre a equipe em Ajustes.</div>'}</div>
     </div>
@@ -535,7 +537,7 @@ function vVendedor(self = false) {
   const above = pos > 1 ? rk[pos - 2] : null;
   const prox = c.com && c.qtd ? (cfg().comTipo === 'pct' ? c.ticket * num(cfg().comValor) / 100 : num(cfg().comValor)) : (cfg().comTipo === 'pct' ? 0 : num(cfg().comValor));
   const nVendas = c.prox ? (isQtd() ? Math.ceil(c.faltaProx) : (c.ticket ? Math.ceil(c.faltaProx / c.ticket) : 0)) : 0;
-  const maxAlvo = Math.max(100, ...c.faixas.map(f => f.alvo)) * 1.08;
+  const maxAlvo = Math.max(c.meta, ...c.faixas.map(f => f.alvo)) * 1.08 || 1;
   return `
   ${self ? `<div class="page-h"><h2>Olá, ${esc(first(v.nome))}</h2><p>Seus ganhos só você e o gestor veem</p></div>` : `<div class="page-h"><h2>Equipe</h2><p>Toque em um vendedor para ver o painel dele</p></div>`}
   <div class="wrap">
@@ -545,23 +547,23 @@ function vVendedor(self = false) {
       <div class="earn"><div><small>Já garantiu este mês</small><b class="num">${brl(c.total)}</b></div></div>
       <div class="split">
         <div><small>Vendido</small><b class="num">${isQtd() ? c.qtd + ' vend.' : kbrl(c.fat)}</b></div>
-        <div><small>Comissão</small><b class="num">${brl(c.com)}</b></div>
-        <div><small>Bônus</small><b class="num" style="color:${c.bonus ? '#34D399' : 'inherit'}">${brl0(c.bonus)}</b></div>
+        ${temCom() ? `<div><small>Comissão</small><b class="num">${brl(c.com)}</b></div>` : `<div><small>Meta</small><b class="num">${fmtBase(c.meta)}</b></div>`}
+        <div><small>${temCom() ? 'Bônus' : 'Prêmio'}</small><b class="num" style="color:${c.bonus ? '#34D399' : 'inherit'}">${brl0(c.bonus)}</b></div>
       </div>
     </div>
 
     <div class="card section">
       <div class="goal">
         <div class="gt"><b class="num">${Math.round(c.pct)}% da meta</b><span>${fmtBase(c.base)} de ${isQtd() ? Math.round(c.meta) : brl0(c.meta)}</span></div>
-        <div class="track"><i class="${barCls(c.pct)}" style="width:${Math.min(100, c.pct / maxAlvo * 100)}%"></i>
-          ${c.faixas.map(f => `<div class="tick ${c.pct >= f.alvo ? 'hit' : ''}" style="left:${f.alvo / maxAlvo * 100}%"><span>${f.alvo}%</span></div>`).join('')}
+        <div class="track"><i class="${barCls(c.pct)}" style="width:${Math.min(100, c.base / maxAlvo * 100)}%"></i>
+          ${c.faixas.map(f => `<div class="tick ${c.base >= f.alvo ? 'hit' : ''}" style="left:${f.alvo / maxAlvo * 100}%"><span>${isQtd() ? f.alvo : kbrl(f.alvo)}</span></div>`).join('')}
         </div>
-        <div class="fx-leg">${c.faixas.map(f => `<span class="${c.pct >= f.alvo ? 'hit' : ''}">${c.pct >= f.alvo ? '✓ ' : ''}${f.alvo}% → ${brl0(f.premio)}</span>`).join('')}</div>
+        <div class="fx-leg">${c.faixas.map(f => `<span class="${c.base >= f.alvo ? 'hit' : ''}">${c.base >= f.alvo ? '✓ ' : ''}${fmtBase(f.alvo)} → ${brl0(f.premio)}</span>`).join('')}</div>
       </div>
-      ${c.prox ? `<div class="nextbox"><div class="ic">${ic('flag')}</div><div><b>Faltam ${fmtBase(c.faltaProx)} para o bônus de ${brl0(c.prox.premio)}</b><span>${!isQtd() && nVendas ? `≈ ${nVendas} venda${nVendas !== 1 ? 's' : ''} no seu ticket médio de ${brl0(c.ticket)} · ` : ''}no ritmo atual você fecha o mês com ${Math.round(c.proj / c.meta * 100)}%</span></div></div>`
-        : `<div class="nextbox"><div class="ic" style="background:var(--green-soft);color:var(--green)">${ic('trophy')}</div><div><b>Todas as faixas de bônus batidas!</b><span>Agora é brigar pelo 1º lugar${num(cfg().destaque) ? ' e pelo prêmio de destaque de ' + brl0(cfg().destaque) : ''}.</span></div></div>`}
+      ${c.prox ? `<div class="nextbox"><div class="ic">${ic('flag')}</div><div><b>Faltam ${fmtBase(c.faltaProx)} para ${temCom() ? 'o bônus' : c.bonus ? 'subir o prêmio para' : 'o prêmio'} de ${brl0(c.prox.premio)}</b><span>${!isQtd() && nVendas ? `≈ ${nVendas} venda${nVendas !== 1 ? 's' : ''} no seu ticket médio de ${brl0(c.ticket)} · ` : ''}no ritmo atual você fecha o mês com ${Math.round(c.proj / c.meta * 100)}%</span></div></div>`
+        : `<div class="nextbox"><div class="ic" style="background:var(--green-soft);color:var(--green)">${ic('trophy')}</div><div><b>${temCom() ? 'Todas as faixas de bônus batidas!' : 'Meta máxima batida!'}</b><span>Agora é brigar pelo 1º lugar${num(cfg().destaque) ? ' e pelo prêmio de destaque de ' + brl0(cfg().destaque) : ''}.</span></div></div>`}
     </div>
-    <div class="card tip"><div class="ic">${ic('zap')}</div><div><b>A próxima venda vale ${brl(prox)} de comissão</b><span>${above ? `${isQtd() ? ((n => n === 1 ? 'Falta 1 venda' : 'Faltam ' + n + ' vendas')(above.key - c.qtd + 1)) : 'Faltam ' + brl0(above.key - c.fat + 1)} para passar ${esc(first(above.v.nome))} e subir para ${pos - 1}º` : 'Você está em 1º lugar. Segura a liderança!'}</span></div></div>
+    <div class="card tip"><div class="ic">${ic('zap')}</div><div>${(() => { const passa = above ? `${isQtd() ? ((n => n === 1 ? 'Falta 1 venda' : 'Faltam ' + n + ' vendas')(above.key - c.qtd + 1)) : 'Faltam ' + brl0(above.key - c.fat + 1)} para passar ${esc(first(above.v.nome))} e subir para ${pos - 1}º` : 'Você está em 1º lugar. Segura a liderança!'; return temCom() ? `<b>A próxima venda vale ${brl(prox)} de comissão</b><span>${passa}</span>` : `<b>${passa}</b><span>Ranking do mês</span>`; })()}</div></div>
     ${pendMes(v.id, m) ? `<div class="card tip"><div class="ic" style="background:var(--amber-soft);color:#B45309">${ic('flag')}</div><div><b>${pendMes(v.id, m)} venda${pendMes(v.id, m) > 1 ? 's' : ''} com pendência</b><span>${self ? 'Toque no item da venda, lá embaixo, quando resolver.' : 'Itens do checklist ainda não marcados.'}</span></div></div>` : ''}
 
     <div class="section"><div class="section-h"><h3>Vendas por dia</h3></div><div class="card chart">${dailyChart(v.id, m)}</div></div>
@@ -580,20 +582,20 @@ function vRelatorio() {
   <div class="wrap">
     <div class="monthnav"><button class="nb" data-act="rel-mes" data-v="-1" aria-label="Mês anterior">${ic('left')}</button><div style="flex:1;text-align:center;font-weight:800">${esc(monthLabel(m))}${isCur ? ' <span style="color:var(--muted);font-weight:600;font-size:12.5px">· parcial</span>' : ''}</div><button class="nb" data-act="rel-mes" data-v="1" aria-label="Próximo mês">${ic('right')}</button></div>
     <div class="kpis" style="margin-top:12px;grid-template-columns:repeat(3,1fr)">
-      ${isQtd() ? `<div class="kpi"><span>Vendas</span><b class="num">${tot.qtd}</b><em>${pendMes(null, m)} com pendência</em></div>` : `<div class="kpi"><span>Faturado</span><b class="num">${kbrl(tot.fat)}</b><em>${tot.qtd} vendas</em></div>`}
-      <div class="kpi"><span>Comissões</span><b class="num">${kbrl(tot.com)}</b><em>${cfg().comTipo === 'fixo' ? brl(cfg().comValor) + ' por venda' : (tot.fat ? (tot.com / tot.fat * 100).toFixed(1).replace('.', ',') : 0) + '% do faturado'}</em></div>
-      <div class="kpi"><span>Bônus</span><b class="num">${kbrl(tot.bonus)}</b><em>${(n => n === 1 ? '1 bateu faixa' : n + ' bateram faixa')(rows.filter(r => r.c.bonus).length)}</em></div>
+      ${isQtd() ? `<div class="kpi"><span>Vendas</span><b class="num">${tot.qtd}</b><em>${temChk() ? pendMes(null, m) + ' com pendência' : 'no mês'}</em></div>` : `<div class="kpi"><span>Faturado</span><b class="num">${kbrl(tot.fat)}</b><em>${tot.qtd} vendas</em></div>`}
+      ${!temCom() ? `<div class="kpi"><span>Prêmios</span><b class="num">${kbrl(tot.bonus)}</b><em>total a pagar</em></div>` : ''}<div class="kpi" ${!temCom() ? 'hidden' : ''}><span>Comissões</span><b class="num">${kbrl(tot.com)}</b><em>${cfg().comTipo === 'fixo' ? brl(cfg().comValor) + ' por venda' : (tot.fat ? (tot.com / tot.fat * 100).toFixed(1).replace('.', ',') : 0) + '% do faturado'}</em></div>
+      ${temCom() ? `<div class="kpi"><span>Bônus</span><b class="num">${kbrl(tot.bonus)}</b><em>${(n => n === 1 ? '1 bateu faixa' : n + ' bateram faixa')(rows.filter(r => r.c.bonus).length)}</em></div>` : `<div class="kpi"><span>Bateram a meta</span><b class="num">${rows.filter(r => r.c.bonus).length} de ${rows.length}</b><em>vendedores</em></div>`}
     </div>
     <div class="card section"><div class="tbl-wrap"><table class="tbl">
       <thead><tr><th>Vendedor</th><th>${isQtd() ? 'Vendas' : 'Vendido'}</th><th>Meta</th><th>A pagar</th></tr></thead>
-      <tbody>${rows.map(r => { const d = r.v.id === lider ? dest : 0; return `<tr><td><b>${esc(first(r.v.nome))}</b>${d ? ` <span class="badge" style="background:#FFF4DE;color:#B45309">1º</span>` : ''}<small class="sm">com. ${brl(r.c.com)}${r.c.bonus + d ? ` + bônus ${brl0(r.c.bonus + d)}` : ''}</small></td><td class="num">${isQtd() ? `${r.c.qtd}<small class="sm">${pendMes(r.v.id, m) ? pendMes(r.v.id, m) + ' pendente' + (pendMes(r.v.id, m) > 1 ? 's' : '') : 'sem pendência'}</small>` : `${kbrl(r.c.fat)}<small class="sm">${r.c.qtd} vendas</small>`}</td><td class="num" style="color:${r.c.pct >= 100 ? 'var(--green)' : 'inherit'};font-weight:700">${Math.round(r.c.pct)}%</td><td class="num"><b>${brl(r.c.total + d)}</b></td></tr>`; }).join('')}</tbody>
+      <tbody>${rows.map(r => { const d = r.v.id === lider ? dest : 0; return `<tr><td><b>${esc(first(r.v.nome))}</b>${d ? ` <span class="badge" style="background:#FFF4DE;color:#B45309">1º</span>` : ''}<small class="sm">${temCom() ? `com. ${brl(r.c.com)}${r.c.bonus + d ? ` + bônus ${brl0(r.c.bonus + d)}` : ''}` : (r.c.bonus + d ? `✓ bateu ${fmtBase(r.c.atual ? r.c.atual.alvo : r.c.meta)}` : `faltam ${fmtBase(r.c.prox ? r.c.faltaProx : 0)}`)}</small></td><td class="num">${isQtd() ? `${r.c.qtd}<small class="sm">${!temChk() ? 'vendas' : pendMes(r.v.id, m) ? pendMes(r.v.id, m) + ' pendente' + (pendMes(r.v.id, m) > 1 ? 's' : '') : 'sem pendência'}</small>` : `${kbrl(r.c.fat)}<small class="sm">${r.c.qtd} vendas</small>`}</td><td class="num" style="color:${r.c.pct >= 100 ? 'var(--green)' : 'inherit'};font-weight:700">${Math.round(r.c.pct)}%</td><td class="num"><b>${brl(r.c.total + d)}</b></td></tr>`; }).join('')}</tbody>
       <tfoot><tr><td>Total</td><td class="num">${isQtd() ? tot.qtd : kbrl(tot.fat)}</td><td></td><td class="num">${brl(tot.com + tot.bonus)}</td></tr></tfoot>
     </table></div></div>
     <div class="btn-row">
       <button class="btn sec" data-act="copy-rel">${ic('copy')} Copiar tabela</button>
-      <a class="btn green" href="https://wa.me/?text=${encodeURIComponent(resumoWa(m, rows, lider))}" target="_blank" rel="noopener">${ic('wa')} Enviar no grupo</a>
+      <a class="btn green" href="https://wa.me/?text=${encodeURIComponent(resumoWa(m, rows, lider))}" target="_blank" rel="noopener">${ic('wa')} WhatsApp</a>
     </div>
-    <p class="foot">Comissão: ${cfg().comTipo === 'pct' ? num(cfg().comValor).toString().replace('.', ',') + '% sobre o valor vendido' : brl(cfg().comValor) + ' por venda'} · Bônus pela maior faixa batida: ${cfg().faixas.slice().sort((a, b) => a.alvo - b.alvo).map(f => `${f.alvo}% = ${brl0(f.premio)}`).join(', ')}${dest ? ` · Destaque do mês: ${brl0(dest)}` : ''}.<br>As regras mudam em Ajustes e o cálculo refaz na hora.</p>
+    <p class="foot">${temCom() ? `Comissão: ${cfg().comTipo === 'pct' ? num(cfg().comValor).toString().replace('.', ',') + '% sobre o valor vendido' : brl(cfg().comValor) + ' por venda'} · ` : 'Regra: bateu, ganhou · '}${temCom() ? 'Bônus' : 'Prêmio'} pela maior meta batida: ${cfg().faixas.slice().sort((a, b) => a.alvo - b.alvo).map(f => `${fmtBase(f.alvo)} = ${brl0(f.premio)}`).join(', ')}${dest ? ` · Destaque do mês: ${brl0(dest)}` : ''}.<br>As regras mudam em Ajustes e o cálculo refaz na hora.</p>
   </div>`;
 }
 function resumoWa(m, rows, lider) {
@@ -623,10 +625,12 @@ function vAjustes() {
           <div class="fld"><label>Tipo</label><select name="comTipo"><option value="pct" ${c.comTipo === 'pct' ? 'selected' : ''}>% sobre o valor</option><option value="fixo" ${c.comTipo === 'fixo' ? 'selected' : ''}>R$ fixo por venda</option></select></div>
           <div class="fld"><label>${c.comTipo === 'pct' ? 'Percentual (%)' : 'Valor por venda (R$)'}</label><input name="comValor" inputmode="decimal" value="${String(c.comValor).replace('.', ',')}"></div>
         </div>
+        <div class="fld"><div class="hint" style="margin-top:0">Deixe 0 se a equipe só ganha quando bate a meta (bateu, ganhou).</div>
+        </div>
       </div></div>
-      <div class="cfg-sec"><h4>Bônus por meta batida</h4><div class="card cfg-card" id="faixas">
+      <div class="cfg-sec"><h4>Prêmio por meta batida</h4><div class="card cfg-card" id="faixas">
         ${c.faixas.map((f, i) => `<div class="faixa">
-          <div class="fld"><label>${i === 0 ? 'Bateu (% da meta)' : '&nbsp;'}</label><input name="f_alvo_${i}" inputmode="numeric" value="${f.alvo}"></div>
+          <div class="fld"><label>${i === 0 ? (isQtd() ? 'Bateu (vendas no mês)' : 'Bateu (R$ vendido)') : '&nbsp;'}</label><input name="f_alvo_${i}" inputmode="numeric" value="${f.alvo}"></div>
           <div class="fld"><label>${i === 0 ? 'Ganha (R$)' : '&nbsp;'}</label><input name="f_premio_${i}" inputmode="decimal" value="${String(f.premio).replace('.', ',')}"></div>
           <button type="button" class="icon-x" data-act="del-faixa" data-v="${i}" aria-label="Remover faixa">${ic('x')}</button></div>`).join('')}
         <button type="button" class="btn sec sm" data-act="add-faixa">${ic('plus')} Adicionar faixa</button>
@@ -687,7 +691,7 @@ function renderChooser() {
     <div class="logo">${ic('trophy')}</div>
     <h1>Placar de Vendas</h1>
     <p class="sub">Um link só para a equipe toda. Cada pessoa entra com o próprio login e vê só o que é dela.</p>
-    <div class="how" style="margin:0 0 18px"><b>Modelo pronto para venda de cartão de benefícios</b><div style="color:#C9D3E6;font-size:13.5px;line-height:1.55">Meta por quantidade de vendas, comissão por venda, canal, forma de pagamento e checklist de cada venda (app ativado, cadastro conferido, 1ª mensalidade). Tudo muda em Ajustes.</div></div>
+    <div class="how" style="margin:0 0 18px"><b>Modelo pronto para venda de cartão de benefícios</b><div style="color:#C9D3E6;font-size:13.5px;line-height:1.55">Regra simples: bateu a meta de vendas do mês, ganhou o prêmio. Sem critério e sem conta. Se um dia quiser, dá para ligar comissão por venda, canal e checklist em Ajustes.</div></div>
     <div class="q">Como quer ver a demonstração?</div>
     <button class="role-card" data-act="role" data-v="gestor"><div class="ic" style="background:#FFD66B;color:#3B2A00">${ic('chart')}</div><div><b>Sou gestor</b><span>Vejo a equipe toda em tempo real: ranking, metas, quanto pagar no fechamento e as regras de comissão.</span></div></button>
     <button class="role-card ${ui.pickMe ? 'on' : ''}" data-act="role" data-v="vendedor"><div class="ic" style="background:#3B6BFF;color:#fff">${ic('user')}</div><div><b>Sou vendedor</b><span>Lanço minhas vendas na hora e acompanho minha comissão, meta e posição no ranking.</span></div></button>
@@ -747,8 +751,9 @@ function previewVenda() {
   if (!v || (!isQtd() && !val)) { $('#prev').innerHTML = ''; return; }
   const before = calcMes(v), com = cfg().comTipo === 'pct' ? val * num(cfg().comValor) / 100 : num(cfg().comValor);
   const newBase = before.base + (isQtd() ? 1 : val), newPct = before.meta ? newBase / before.meta * 100 : 0;
-  const hit = before.faixas.filter(fx => newPct >= fx.alvo && before.pct < fx.alvo).pop();
-  $('#prev').innerHTML = `<div class="preview-sale">${esc(first(v.nome))} ganha <b>${brl(com)}</b> de comissão com essa venda${hit ? ` e <b>libera o bônus de ${brl0(hit.premio)}</b> (${hit.alvo}% da meta) 🎉` : ` e vai para <b>${Math.round(newPct)}%</b> da meta`}.</div>`;
+  const hit = before.faixas.filter(fx => newBase >= fx.alvo && before.base < fx.alvo).pop();
+  const nm = esc(first(v.nome)), goal = hit ? ` e <b>bate ${fmtBase(hit.alvo)}: garante ${brl0(hit.premio)}</b> 🎉` : (before.prox ? ` e fica a <b>${fmtBase(Math.max(0, before.prox.alvo - newBase))}</b> do prêmio de ${brl0(before.prox.premio)}` : ` e vai para <b>${Math.round(newPct)}%</b> da meta`);
+  $('#prev').innerHTML = `<div class="preview-sale">${temCom() ? `${nm} ganha <b>${brl(com)}</b> de comissão com essa venda` : `Com essa venda, ${nm} chega a <b>${fmtBase(newBase)}</b>`}${goal}.</div>`;
 }
 async function saveVenda(f) {
   const vid = f.vid.value, valor = f.valor ? parseMoney(f.valor.value) : 0, data = f.data.value;
@@ -762,10 +767,11 @@ async function saveVenda(f) {
   save(); ui.lastVend = vid; closeSheet();
   const after = calcMes(v, m);
   const posAfter = sameMonth ? ranking(per.from, per.to).findIndex(r => r.v.id === vid) : -1;
-  const hit = after.faixas.filter(fx => after.pct >= fx.alvo && before.pct < fx.alvo).pop();
+  const hit = after.faixas.filter(fx => after.base >= fx.alvo && before.base < fx.alvo).pop();
   render(true);
-  if (hit) toast(`🏆 ${first(v.nome)} bateu ${hit.alvo}% da meta e liberou o bônus de ${brl0(hit.premio)}!`, 'win');
+  if (hit) toast(`🏆 ${first(v.nome)} bateu ${fmtBase(hit.alvo)} e garantiu ${brl0(hit.premio)}!`, 'win');
   else if (posAfter > -1 && posAfter < posBefore) toast(`🚀 ${first(v.nome)} subiu para ${posAfter + 1}º lugar no mês!`, 'win');
+  else if (!temCom()) toast(isGestor() ? `Venda lançada para ${first(v.nome)} · ${fmtBase(after.base)} no mês` : `Venda lançada! Você está com ${fmtBase(after.base)}${after.prox ? ', faltam ' + fmtBase(after.faltaProx) : ''}`);
   else toast(isGestor() ? `Venda ${valor ? 'de ' + brl0(valor) + ' ' : ''}lançada para ${first(v.nome)} · +${brl(after.com - before.com)}` : `Venda lançada! +${brl(after.com - before.com)} de comissão para você`);
 }
 
@@ -887,7 +893,7 @@ document.addEventListener('click', async e => {
     }
     case 'chk': { const sv = DATA.vendas.find(x => x.id === id); if (sv) { sv.chk = sv.chk || {}; sv.chk[v] = !sv.chk[v]; save(); render(true); if (sv.chk[v] && !pendentes(sv)) toast('Venda completa ✓'); } break; }
     case 'del-venda': if (!arm(el, '?')) break; DATA.vendas = DATA.vendas.filter(s => s.id !== id); save(); render(true); toast('Venda excluída'); break;
-    case 'add-faixa': readCfgForm(); { const fx = cfg().faixas, last = fx[fx.length - 1]; fx.push({ alvo: last ? last.alvo + 20 : 100, premio: last ? Math.round(num(last.premio) * 1.5) : 200 }); } render(true); break;
+    case 'add-faixa': readCfgForm(); { const fx = cfg().faixas, last = fx[fx.length - 1]; fx.push({ alvo: last ? last.alvo + (isQtd() ? 10 : 5000) : num(cfg().meta), premio: last ? Math.round(num(last.premio) * 1.5) : 200 }); } render(true); break;
     case 'del-faixa': readCfgForm(); cfg().faixas.splice(num(v), 1); render(true); break;
     case 'add-vend': { const nv = { id: uid(), nome: 'Novo vendedor', meta: 0 }; DATA.vendedores.push(nv); save(); render(true); const inp = document.querySelector(`[data-vname="${nv.id}"]`); if (inp) { inp.focus(); inp.select(); } break; }
     case 'del-vend': { if (!arm(el, '?')) break; const n = DATA.vendas.filter(s => s.vid === id).length; DATA.vendedores = DATA.vendedores.filter(x => x.id !== id); DATA.vendas = DATA.vendas.filter(s => s.vid !== id); save(); render(true); toast(`Vendedor removido${n ? ` com ${n} vendas` : ''}`); break; }
@@ -911,7 +917,7 @@ document.addEventListener('change', e => {
   const t = e.target;
   if (t.dataset.vname) { const v = vend(t.dataset.vname); if (v) { v.nome = t.value.trim() || v.nome; save(); } }
   if (t.dataset.vmeta) { const v = vend(t.dataset.vmeta); if (v) { v.meta = parseMoney(t.value); save(); toast(v.meta ? `Meta de ${first(v.nome)}: ${fmtBase(v.meta)}` : `${first(v.nome)} usa a meta padrão`); } }
-  if (t.name === 'comTipo' || t.name === 'metaTipo') { readCfgForm(); if (t.name === 'metaTipo') { cfg().meta = t.value === 'qtd' ? 40 : 30000; DATA.vendedores.forEach(v => v.meta = 0); } save(); render(true); }
+  if (t.name === 'comTipo' || t.name === 'metaTipo') { readCfgForm(); if (t.name === 'metaTipo') { cfg().meta = t.value === 'qtd' ? 30 : 30000; cfg().faixas = [{ alvo: cfg().meta, premio: 300 }]; DATA.vendedores.forEach(v => v.meta = 0); } save(); render(true); }
 });
 document.addEventListener('submit', e => {
   e.preventDefault(); const f = e.target;
@@ -935,21 +941,21 @@ function seed() {
     const dow = d.getDay(), isToday = ymd(d) === today();
     vendedores.forEach(v => {
       const base = dow === 0 ? 0.25 : dow === 6 ? 1.3 : 1;
-      let n = Math.floor(rnd() * 5.4 * v.k * base + (rnd() < 0.45 * v.k ? 1 : 0));
+      let n = Math.floor(rnd() * 3.5 * v.k * base + (rnd() < 0.45 * v.k ? 1 : 0));
       if (isToday) n = v.k > 0.9 ? 1 + (rnd() < 0.4 ? 1 : 0) : (rnd() < 0.55 ? 1 : 0);
       for (let i = 0; i < n; i++) {
         const valor = Math.round((180 + rnd() * rnd() * 2400 * (0.75 + v.k * 0.35)) / 10) * 10;
         const ts = isToday ? Date.now() - Math.floor(rnd() * Math.min(9, Math.max(1, t.getHours() - 7)) * 36e5) : d.getTime() + 9 * 36e5 + rnd() * 9 * 36e5;
         const age = Math.round((fromYmd(today()) - fromYmd(ymd(d))) / 864e5), chk = {};
         CHK.forEach((it, j) => { if (rnd() < (age > 4 ? 0.997 : age > 1 ? 0.9 - j * 0.07 : 0.55 - j * 0.12)) chk[it] = true; });
-        vendas.push({ id: uid(), vid: v.id, valor: 0, data: ymd(d), cliente: rnd() < 0.75 ? clientes[Math.floor(rnd() * clientes.length)] : '', matricula: String(Math.floor(100000 + rnd() * 899999)), canal: pickW([['Loja', 4], ['Externa', 3], ['PAP', 2], ['Indicação', 1.5], ['Empresa (PJ)', 0.7]]), pag: pickW([['Cartão de crédito', 4], ['Débito em conta', 2.5], ['Boleto', 2], ['Pix', 1.5]]), chk, ts });
+        vendas.push({ id: uid(), vid: v.id, valor: 0, data: ymd(d), cliente: rnd() < 0.75 ? clientes[Math.floor(rnd() * clientes.length)] : '', matricula: String(Math.floor(100000 + rnd() * 899999)), canal: '', pag: '', chk: {}, ts });
       }
     });
   }
   vendedores.forEach(v => delete v.k);
   return {
-    cfg: { empresa: 'Sua Franquia', metaTipo: 'qtd', meta: 50, comTipo: 'fixo', comValor: 20, faixas: [{ alvo: 80, premio: 100 }, { alvo: 100, premio: 250 }, { alvo: 120, premio: 500 }], destaque: 200,
-      canais: CANAIS, pagamentos: PAGS, checklist: CHK },
+    cfg: { empresa: 'Sua Franquia', metaTipo: 'qtd', meta: 30, comTipo: 'fixo', comValor: 0, faixas: [{ alvo: 30, premio: 300 }, { alvo: 40, premio: 500 }], destaque: 0,
+      canais: [], pagamentos: [], checklist: [] },
     vendedores, vendas
   };
 }
